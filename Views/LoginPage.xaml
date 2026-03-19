@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SICRY_APP.Views.LoginPage"
+             Title=" "
+             BackgroundImageSource="login1.png"
+             Shell.NavBarIsVisible="False">
+
+    <Frame WidthRequest="350"
+           HeightRequest="450"
+           BackgroundColor="#F5F5F5"
+           CornerRadius="12"
+           HasShadow="True"
+           HorizontalOptions="Center"
+           VerticalOptions="Center">
+
+        <Grid RowDefinitions=".2*,.3*, .5*">
+            <Label Grid.Row="0" Text="Bienvenido" TextColor="Black" FontSize="30" HorizontalTextAlignment="Center" VerticalTextAlignment="Start" VerticalOptions="Center" Padding="10"/>
+
+            <Image Source="logo.png" Grid.Row="1"/>
+
+            <VerticalStackLayout Grid.Row="2" VerticalOptions="Start" HorizontalOptions="Center" Padding="10">
+                <HorizontalStackLayout>
+                    <Image Source="user.png" MaximumHeightRequest="15"/>
+                    <Entry Placeholder="Usuario" PlaceholderColor="Black" TextColor="Black" VerticalTextAlignment="Center" HorizontalTextAlignment="Start" WidthRequest="200"
+                           Text="{Binding UserName}" />
+                </HorizontalStackLayout>
+
+                <HorizontalStackLayout>
+                    <Image Source="passowrd.png" MinimumWidthRequest="10" MaximumHeightRequest="15"/>
+                    <Entry Placeholder="Contraseña" TextColor="Black" PlaceholderColor="Black" VerticalTextAlignment="Center" HorizontalTextAlignment="Start" VerticalOptions="Center" WidthRequest="200" IsPassword="True"
+                           Text="{Binding Password}" />
+                </HorizontalStackLayout>
+
+                <VerticalStackLayout Padding="0,10,0,0">
+                    <Button Text="Continuar" TextColor="White" BackgroundColor="Green"
+                            Command="{Binding LoginCommand}" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </Grid>
+    </Frame>
+</ContentPage>

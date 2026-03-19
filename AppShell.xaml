@@ -1,14 +1,36 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell
     x:Class="SICRY_APP.AppShell"
+    x:Name="ThisShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:SICRY_APP"
-    Title="SICRY_APP">
+    xmlns:views="clr-namespace:SICRY_APP.Views"
+    Title="SICRY APP"
+    Shell.TabBarBackgroundColor="White"
+    Shell.TabBarTitleColor="Gray"
+    Shell.TabBarUnselectedColor="Gray"
+    Shell.TabBarForegroundColor="#009688"
+    Shell.BackgroundColor="White"
+    Shell.NavBarIsVisible="True"
+    Shell.NavBarHasShadow="False">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <Shell.TitleView>
+        <Grid ColumnDefinitions="Auto, *, Auto" Padding="0,0,15,0" VerticalOptions="Center">
+            <HorizontalStackLayout Grid.Column="0" Spacing="10" VerticalOptions="Center">
+                <Image Source="logo.png" HeightRequest="45" WidthRequest="45" VerticalOptions="Center"/>
+                <VerticalStackLayout VerticalOptions="Center" Spacing="0">
+                    <Label Text="Bienvenido" FontSize="10" TextColor="Gray"/>
+                    <Label x:Name="lblUser" Text="Cargando..." FontSize="14" FontAttributes="Bold" TextColor="#009688"/>
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
+        </Grid>
+    </Shell.TitleView>
+
+    <TabBar>
+        <Tab Icon="home.png" Title="Inicio">
+            <ShellContent ContentTemplate="{DataTemplate views:HomePage}" Route="HomePage"/>
+        </Tab>
+
+    </TabBar>
 
 </Shell>

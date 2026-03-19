@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Maui.Controls;
+using SICRY_APP.Views; // Importamos la carpeta de las vistas
 
 namespace SICRY_APP
 {
@@ -11,7 +12,8 @@ namespace SICRY_APP
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            return new Window(new AppShell());
+            // Arrancamos la aplicación directamente en la pantalla de Login
+            return new Window(new LoginPage());
         }
     }
 }
