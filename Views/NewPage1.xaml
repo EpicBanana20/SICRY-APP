@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:SICRY_APP.ViewModels"
+             x:Class="SICRY_APP.Views.CalendarPage"
+             Title="Mis Reportes"
+             BackgroundColor="White">
+
+    <CollectionView ItemsSource="{Binding Reportes}"
+                    VerticalScrollBarVisibility="Never"
+                    Margin="20,15,20,20">
+
+        <CollectionView.ItemTemplate>
+            <DataTemplate>
+                <VerticalStackLayout Padding="0,0,0,15">
+                    <Frame BackgroundColor="#FBFBFB" CornerRadius="18" HasShadow="True" BorderColor="Transparent" Padding="15">
+                        <VerticalStackLayout Spacing="8">
+
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Label Text="{Binding Titulo}" FontAttributes="Bold" FontSize="16" TextColor="#3E2723" Grid.Column="0" VerticalOptions="Center"/>
+                                <Frame BackgroundColor="{Binding ColorEstadoFondo}" CornerRadius="8" Padding="10,4" HasShadow="False" BorderColor="Transparent" Grid.Column="1">
+                                    <Label Text="{Binding Estado}" TextColor="{Binding ColorEstadoTexto}" FontSize="11" FontAttributes="Bold"/>
+                                </Frame>
+                            </Grid>
+
+                            <Label Text="{Binding Ubicacion}" TextColor="#B07C88" FontSize="12"/>
+                            <Label Text="{Binding Descripcion}" TextColor="#555" FontSize="13" MaxLines="3" LineBreakMode="TailTruncation"/>
+
+                            <BoxView HeightRequest="1" Color="#E0E0E0" Margin="0,5"/>
+
+                            <Grid ColumnDefinitions="*,*">
+                                <Button Text="Editar" Grid.Column="0" 
+                                        BackgroundColor="Transparent" TextColor="#009688" FontAttributes="Bold" HeightRequest="35" Margin="0,0,5,0" 
+                                        BorderColor="#009688" BorderWidth="1" CornerRadius="10" FontSize="12" 
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CalendarViewModel}}, Path=EditarReporteCommand}"
+                                        CommandParameter="{Binding .}"/>
+
+                                <Button Text="Borrar" Grid.Column="1" 
+                                        BackgroundColor="#FFEBEE" TextColor="#D32F2F" FontAttributes="Bold" HeightRequest="35" Margin="5,0,0,0" 
+                                        CornerRadius="10" FontSize="12" 
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CalendarViewModel}}, Path=BorrarReporteCommand}"
+                                        CommandParameter="{Binding .}"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+
+        <CollectionView.EmptyView>
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Padding="50">
+                <Label Text="📄" FontSize="60" HorizontalOptions="Center" TextColor="LightGray"/>
+                <Label Text="No hay reportes" FontAttributes="Bold" FontSize="18" TextColor="Gray" HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </CollectionView.EmptyView>
+    </CollectionView>
+</ContentPage>

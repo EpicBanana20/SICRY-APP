@@ -31,6 +31,9 @@
             <ShellContent ContentTemplate="{DataTemplate views:HomePage}" Route="HomePage"/>
         </Tab>
 
+        <Tab Icon="calendar.png" Title="Reportes">
+            <ShellContent ContentTemplate="{DataTemplate views:CalendarPage}" Route="CalendarPage"/>
+        </Tab>
     </TabBar>
 
 </Shell>

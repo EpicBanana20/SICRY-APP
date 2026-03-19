@@ -3,14 +3,14 @@ using SICRY_APP.ViewModels;
 
 namespace SICRY_APP.Views
 {
-    public partial class HomePage : ContentPage
+    public partial class CalendarPage : ContentPage
     {
-        public HomePage()
+        public CalendarPage()
         {
             InitializeComponent();
 
-            // Conexión exclusiva con el ViewModel
-            BindingContext = new HomeViewModel();
+            // Asignación de la instancia de CalendarViewModel como BindingContext
+            BindingContext = new CalendarViewModel();
         }
     }
 }
