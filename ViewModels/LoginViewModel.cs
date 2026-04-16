@@ -2,49 +2,59 @@
 using CommunityToolkit.Mvvm.Input;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
+using SICRY_APP.Services; // Importante para usar el ApiService
 
 namespace SICRY_APP.ViewModels
 {
-    // 1. "partial" permite que el paquete que instalamos agregue código invisible por nosotros.
-    // 2. "ObservableObject" le da a esta clase el poder de avisarle a la pantalla cuando un texto cambia.
     public partial class LoginViewModel : ObservableObject
     {
-        // [ObservableProperty] es magia del Toolkit. 
-        // Toma esta variable en minúscula (userName) y crea una propiedad pública en mayúscula (UserName) 
-        // que la pantalla podrá leer y escribir automáticamente.
+        // Propiedades reactivas para la interfaz
         [ObservableProperty]
         private string userName;
 
         [ObservableProperty]
         private string password;
 
-        // [RelayCommand] convierte este método en un "Comando" llamado LoginCommand.
-        // Los botones en la pantalla usarán ese comando en lugar del tradicional evento "Clicked".
         [RelayCommand]
         private async Task LoginAsync()
         {
-            // Esta es la misma lógica que tenías en tu proyecto anterior, 
-            // pero ahora está separada y segura en el ViewModel.
-            if (UserName == "admin" && Password == "1234")
+            // 1. Validación básica de campos vacíos
+            if (string.IsNullOrWhiteSpace(UserName) || string.IsNullOrWhiteSpace(Password))
             {
-                // Ponemos la primera letra en mayúscula
+                if (Application.Current?.MainPage != null)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Aviso", "Por favor ingresa usuario y contraseña.", "OK");
+                }
+                return;
+            }
+
+            // 2. Intentar el inicio de sesión con la API
+            var apiService = new ApiService();
+            var token = await apiService.LoginAsync(UserName, Password);
+
+            // 3. Evaluar el resultado
+            if (!string.IsNullOrEmpty(token))
+            {
+                // ÉXITO: El servidor devolvió un Token JWT válido
+
+                // Formateamos el nombre para mostrarlo en la App (Primera letra mayúscula)
                 string formattedName = char.ToUpper(UserName[0]) + UserName.Substring(1);
 
-                // Preparamos la pantalla principal (AppShell)
+                // Configuramos la navegación a la pantalla principal
                 var shell = new AppShell();
 
-                // Si tienes tu método SetUsuario en AppShell, esto le pasará el nombre
+                // Pasamos el nombre del usuario al AppShell si la instancia existe
                 AppShell.Instance?.SetUsuario(formattedName);
 
-                // Cambiamos la pantalla actual por la pantalla principal
+                // Cambiamos la página principal de la App
                 Application.Current.MainPage = shell;
             }
             else
             {
-                // Si los datos son incorrectos, mostramos una alerta
+                // ERROR: Credenciales inválidas o el servidor está apagado
                 if (Application.Current?.MainPage != null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Error", "Usuario o contraseña inválidos.", "OK");
+                    await Application.Current.MainPage.DisplayAlert("Error", "Usuario o contraseña incorrectos, o no se pudo contactar al servidor.", "OK");
                 }
             }
         }
