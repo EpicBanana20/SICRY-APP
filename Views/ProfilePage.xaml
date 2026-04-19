@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SICRY_APP.Views.ProfilePage"
+             Title="Perfil"
+             BackgroundColor="White">
+
+	<ScrollView>
+		<VerticalStackLayout Spacing="20" Padding="30,50,30,30" HorizontalOptions="Center">
+
+			<Frame HeightRequest="120" WidthRequest="120" CornerRadius="60" Padding="0"
+                   IsClippedToBounds="True" HorizontalOptions="Center" BorderColor="#009688">
+				<Image Source="user.png" Aspect="AspectFill" />
+			</Frame>
+
+			<VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+				<Label x:Name="lblFullName"
+           Text="Cargando nombre..."
+           FontSize="22"
+           FontAttributes="Bold"
+           HorizontalOptions="Center"
+           TextColor="#333"/>
+
+				<HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+					<Label x:Name="lblFullName"
+						   FontSize="22"
+						   FontAttributes="Bold"
+						   HorizontalOptions="Center"
+						   TextColor="#333"/>
+
+					<HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+						<Label Text="@" FontSize="14" TextColor="#009688" FontAttributes="Bold"/>
+						<Label x:Name="lblUsername"
+							   FontSize="14"
+							   TextColor="Gray"/>
+					</HorizontalStackLayout>
+				</HorizontalStackLayout>
+			</VerticalStackLayout>
+
+			<BoxView HeightRequest="1" BackgroundColor="#F0F0F0" Margin="0,10"/>
+
+			<Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto" ColumnSpacing="15" RowSpacing="20">
+
+				<Label Grid.Row="1" Grid.Column="0" Text="🛠️" FontSize="18"/>
+				<Label Grid.Row="1" Grid.Column="1" Text="Rol: Técnico de Mantenimiento" VerticalOptions="Center" TextColor="#7D5A64"/>
+			</Grid>
+
+			<Button Text="Cerrar Sesión"
+                    BackgroundColor="#B07C88"
+                    TextColor="White"
+                    CornerRadius="20"
+                    Margin="0,30,0,0"
+                    HeightRequest="45"/>
+
+		</VerticalStackLayout>
+	</ScrollView>
+</ContentPage>

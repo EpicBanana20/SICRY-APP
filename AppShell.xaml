@@ -34,6 +34,10 @@
         <Tab Icon="calendar.png" Title="Reportes">
             <ShellContent ContentTemplate="{DataTemplate views:CalendarPage}" Route="CalendarPage"/>
         </Tab>
-    </TabBar>
+
+		<Tab Icon="user.png" Title="Usuario">
+			<ShellContent ContentTemplate="{DataTemplate views:ProfilePage}" Route="ProfilePage"/>
+		</Tab>
+	</TabBar>
 
 </Shell>
