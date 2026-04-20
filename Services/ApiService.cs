@@ -12,7 +12,7 @@ namespace SICRY_APP.Services
 		private static ApiService _instance;
 		public static ApiService Instance => _instance ??= new ApiService();
 
-		private readonly string _baseUrl = "http://192.168.1.84:5128/api";
+		private readonly string _baseUrl = "https://sicryapi-cefncwd9fph6ecbt.mexicocentral-01.azurewebsites.net/api";
 		private readonly HttpClient _httpClient;
 		private const string TokenKey = "jwt_token";
 
