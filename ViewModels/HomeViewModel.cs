@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using IntelliJ.Lang.Annotations;
 using SICRY_APP.Models;
+using SICRY_APP.Services;
 using System.Collections.ObjectModel;
 using System.Globalization;
 
@@ -12,15 +14,21 @@ namespace SICRY_APP.ViewModels
         private ObservableCollection<CalendarDay> days;
 
         [ObservableProperty]
-        private ObservableCollection<Reporte> tareas;
+        private ObservableCollection<Asignacion> tareas;
+
+        [ObservableProperty]
+        private bool isBusy;
+
+        [ObservableProperty]
+        private bool hasTareas;
 
         public HomeViewModel()
         {
             Days = new ObservableCollection<CalendarDay>();
-            Tareas = new ObservableCollection<Reporte>();
+            Tareas = new ObservableCollection<Asignacion>();
 
             LoadDays();
-            LoadMockTareas();
+            _ = CargarAsignacionesAsync();
         }
 
         private void LoadDays()
@@ -45,15 +53,25 @@ namespace SICRY_APP.ViewModels
             }
         }
 
-        private void LoadMockTareas()
+        [RelayCommand]
+        private async Task CargarAsignacionesAsync()
         {
-            Tareas.Add(new Reporte
+            try
             {
-                Titulo = "Mantenimiento Preventivo",
-                Descripcion = "Revisar y realizar mantenimiento preventivo del motor en Pozo Norte-12.",
-                Ubicacion = "Pozo Norte-12",
-                Estado = "Por hacer"
-            });
+                IsBusy = true;
+                Tareas.Clear();
+
+                var lista = await ApiService.Instance.GetMisAsignacionesAsync();
+
+                foreach (var a in lista)
+                    Tareas.Add(a);
+
+                HasTareas = Tareas.Count > 0;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
