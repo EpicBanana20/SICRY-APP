@@ -7,14 +7,19 @@ using System.Collections.ObjectModel;
 namespace SICRY_APP.ViewModels
 {
     [QueryProperty(nameof(AsignacionSeleccionada), "Asignacion")]
+    [QueryProperty(nameof(ReporteExistente), "Reporte")]
     public partial class ReportFormViewModel : ObservableObject
     {
         [ObservableProperty] private Asignacion asignacionSeleccionada;
+        [ObservableProperty] private ReporteItem reporteExistente;
         [ObservableProperty] private string tipoReporte; // electricista | embobinado | mantenimiento
         [ObservableProperty] private string tituloPantalla;
         [ObservableProperty] private string descripcion;
         [ObservableProperty] private bool esConclusivo;
         [ObservableProperty] private bool isBusy;
+        [ObservableProperty] private bool modoEdicion;
+        [ObservableProperty] private bool modoCreacion = true;
+        [ObservableProperty] private string ubicacionTexto;
 
         // Catálogos
         [ObservableProperty] private ObservableCollection<CategoriaFallo> categoriasFallos;
@@ -46,7 +51,27 @@ namespace SICRY_APP.ViewModels
         partial void OnAsignacionSeleccionadaChanged(Asignacion value)
         {
             if (value == null) return;
+            UbicacionTexto = value.Pozo;
             _ = InicializarAsync();
+        }
+
+        partial void OnReporteExistenteChanged(ReporteItem value)
+        {
+            if (value == null) return;
+            ModoEdicion = true;
+            ModoCreacion = false;
+            TipoReporte = value.Tipo;
+            Descripcion = value.Descripcion;
+            EsConclusivo = value.EsConclusivo;
+            UbicacionTexto = value.Ubicacion;
+            TituloPantalla = value.Tipo switch
+            {
+                "electricista" => "Editar Reporte Eléctrico",
+                "embobinado" => "Editar Reporte de Embobinado",
+                "mantenimiento" => "Editar Reporte de Mantenimiento",
+                _ => "Editar Reporte"
+            };
+            MostrarMotor = false; // motor no editable aquí
         }
 
         private async Task InicializarAsync()
@@ -165,6 +190,28 @@ namespace SICRY_APP.ViewModels
                 await Application.Current.MainPage.DisplayAlert("Aviso", "La descripción es obligatoria.", "OK");
                 return;
             }
+
+            // Rama: modo edición
+            if (ModoEdicion && ReporteExistente != null)
+            {
+                try
+                {
+                    IsBusy = true;
+                    ReporteExistente.Descripcion = Descripcion;
+                    ReporteExistente.EsConclusivo = EsConclusivo;
+                    var ok = await ApiService.Instance.ActualizarReporteAsync(ReporteExistente);
+                    if (!ok)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error", "No se pudo actualizar el reporte.", "OK");
+                        return;
+                    }
+                    await Application.Current.MainPage.DisplayAlert("Éxito", "Reporte actualizado.", "OK");
+                    await Shell.Current.GoToAsync("..");
+                }
+                finally { IsBusy = false; }
+                return;
+            }
+
             if (MostrarMotor && MotorSeleccionado == null)
             {
                 await Application.Current.MainPage.DisplayAlert("Aviso", "Selecciona un motor.", "OK");

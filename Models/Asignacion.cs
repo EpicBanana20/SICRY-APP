@@ -71,7 +71,7 @@ namespace SICRY_APP.Models
 
     public class PozoMini
     {
-        [JsonPropertyName("idPozo")]
+        [JsonPropertyName("id")]
         public int IdPozo { get; set; }
 
         [JsonPropertyName("ubicacionPozo")]

@@ -323,7 +323,7 @@ namespace SICRY_APP.Services
                 System.Diagnostics.Debug.WriteLine($"===== RepElectricista status={resp.StatusCode} body={contenido} =====");
                 if (!resp.IsSuccessStatusCode) return 0;
                 var result = await resp.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
-                return result.TryGetProperty("idReporteCampo", out var idProp) ? idProp.GetInt32() : 0;
+                return result.TryGetProperty("id", out var idProp) ? idProp.GetInt32() : 0;
             }
             catch { return 0; }
         }
@@ -511,6 +511,214 @@ namespace SICRY_APP.Services
             SecureStorage.Default.Remove(TokenKey);
             _usuariosCache = null;
             _pozosCache = null;
+            _categoriasCache = null;
+            _refaccionesCache = null;
+            _motoresCache = null;
+        }
+
+        // ============ LISTAR REPORTES DEL USUARIO ============
+
+        public async Task<List<ReporteItem>> GetMisReportesAsync()
+        {
+            var resultado = new List<ReporteItem>();
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return resultado;
+
+                int idUsuario = await GetIdUsuarioAsync();
+                if (idUsuario == 0) return resultado;
+
+                // 1. Todas las asignaciones del usuario (para saber cuáles reportes son míos)
+                var asignacionesReq = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/asignaciones");
+                asignacionesReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var asignResp = await _httpClient.SendAsync(asignacionesReq);
+                if (!asignResp.IsSuccessStatusCode) return resultado;
+                var todas = await asignResp.Content.ReadFromJsonAsync<List<Asignacion>>() ?? new();
+                var misAsignaciones = todas.Where(a => a.IdUsuarioEmpleado == idUsuario).ToList();
+                var idsAsignaciones = misAsignaciones.Select(a => a.IdAsignacion).ToHashSet();
+                if (idsAsignaciones.Count == 0) return resultado;
+
+                var pozos = await GetPozosAsync();
+
+                // 2. Electricista
+                var reqE = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/repelectricista");
+                reqE.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var respE = await _httpClient.SendAsync(reqE);
+                if (respE.IsSuccessStatusCode)
+                {
+                    var lista = await respE.Content.ReadFromJsonAsync<List<ReporteElectricista>>() ?? new();
+                    foreach (var r in lista.Where(x => idsAsignaciones.Contains(x.IdAsignacion)))
+                    {
+                        var pozo = pozos.FirstOrDefault(p => p.IdPozo == r.IdPozo);
+                        resultado.Add(new ReporteItem
+                        {
+                            Id = r.IdReporteCampo,
+                            IdAsignacion = r.IdAsignacion,
+                            IdPozo = r.IdPozo,
+                            Tipo = "electricista",
+                            Fecha = r.RepFechaReporte,
+                            EsConclusivo = r.RepEsConclusivo,
+                            Descripcion = r.RepDescripcion,
+                            Ubicacion = pozo?.UbicacionPozo ?? "Sin pozo"
+                        });
+                    }
+                }
+
+                // 3. Embobinado
+                var reqB = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/repembobinado");
+                reqB.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var respB = await _httpClient.SendAsync(reqB);
+                if (respB.IsSuccessStatusCode)
+                {
+                    var lista = await respB.Content.ReadFromJsonAsync<List<ReporteEmbobinado>>() ?? new();
+                    foreach (var r in lista.Where(x => idsAsignaciones.Contains(x.IdAsignacion)))
+                    {
+                        resultado.Add(new ReporteItem
+                        {
+                            Id = r.IdReporteEmbobinado,
+                            IdAsignacion = r.IdAsignacion,
+                            IdMotor = r.IdMotor,
+                            Tipo = "embobinado",
+                            Fecha = r.RepEmbFechaReporte,
+                            EsConclusivo = r.RepEmbEsConclusivo,
+                            Descripcion = r.RepEmbDescripcion,
+                            Ubicacion = $"Motor #{r.IdMotor}"
+                        });
+                    }
+                }
+
+                // 4. Mantenimiento
+                var reqM = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/repmantenimiento");
+                reqM.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var respM = await _httpClient.SendAsync(reqM);
+                if (respM.IsSuccessStatusCode)
+                {
+                    var lista = await respM.Content.ReadFromJsonAsync<List<ReporteMantenimiento>>() ?? new();
+                    foreach (var r in lista.Where(x => idsAsignaciones.Contains(x.IdAsignacion)))
+                    {
+                        resultado.Add(new ReporteItem
+                        {
+                            Id = r.IdReporteMantenimiento,
+                            IdAsignacion = r.IdAsignacion,
+                            IdMotor = r.IdMotor,
+                            Tipo = "mantenimiento",
+                            Fecha = r.RepManFechaReporte,
+                            EsConclusivo = r.RepManEsConclusivo,
+                            Descripcion = r.RepManDescripcion,
+                            Ubicacion = $"Motor #{r.IdMotor}"
+                        });
+                    }
+                }
+
+                return resultado.OrderByDescending(r => r.Fecha).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error GetMisReportes: {ex.Message}");
+                return resultado;
+            }
+        }
+
+        // ============ ACTUALIZAR REPORTE ============
+
+        public async Task<bool> ActualizarReporteAsync(ReporteItem item)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return false;
+
+                object body;
+                string endpoint;
+                switch (item.Tipo)
+                {
+                    case "electricista":
+                        endpoint = $"{_baseUrl}/repelectricista/{item.Id}";
+                        body = new
+                        {
+                            idReporteCampo = item.Id,
+                            idAsignacion = item.IdAsignacion,
+                            idPozo = item.IdPozo,
+                            repFechaReporte = item.Fecha,
+                            repEsConclusivo = item.EsConclusivo,
+                            repDescripcion = item.Descripcion
+                        };
+                        break;
+                    case "embobinado":
+                        endpoint = $"{_baseUrl}/repembobinado/{item.Id}";
+                        body = new
+                        {
+                            idReporteEmbobinado = item.Id,
+                            idAsignacion = item.IdAsignacion,
+                            idMotor = item.IdMotor,
+                            repEmbFechaReporte = item.Fecha,
+                            repEmbEsConclusivo = item.EsConclusivo,
+                            repEmbDescripcion = item.Descripcion,
+                            repEmbTieneHorasExtras = false,
+                            repEmbHorasExtras = 0
+                        };
+                        break;
+                    case "mantenimiento":
+                        endpoint = $"{_baseUrl}/repmantenimiento/{item.Id}";
+                        body = new
+                        {
+                            idReporteMantenimiento = item.Id,
+                            idAsignacion = item.IdAsignacion,
+                            idMotor = item.IdMotor,
+                            repManFechaReporte = item.Fecha,
+                            repManEsConclusivo = item.EsConclusivo,
+                            repManDescripcion = item.Descripcion,
+                            repManTieneHorasExtras = false,
+                            repManHorasExtras = 0
+                        };
+                        break;
+                    default: return false;
+                }
+
+                var req = new HttpRequestMessage(HttpMethod.Put, endpoint)
+                { Content = JsonContent.Create(body) };
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                var contenido = await resp.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"===== PUT {item.Tipo} status={resp.StatusCode} body={contenido} =====");
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error ActualizarReporte: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ============ ELIMINAR REPORTE ============
+
+        public async Task<bool> EliminarReporteAsync(string tipo, int id)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return false;
+
+                string endpoint = tipo switch
+                {
+                    "electricista" => $"{_baseUrl}/repelectricista/{id}",
+                    "embobinado" => $"{_baseUrl}/repembobinado/{id}",
+                    "mantenimiento" => $"{_baseUrl}/repmantenimiento/{id}",
+                    _ => null
+                };
+                if (endpoint == null) return false;
+
+                var req = new HttpRequestMessage(HttpMethod.Delete, endpoint);
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error EliminarReporte: {ex.Message}");
+                return false;
+            }
         }
     }
 

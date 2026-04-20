@@ -18,7 +18,7 @@ namespace SICRY_APP.Models
 
 	public class Refaccion
 	{
-		[JsonPropertyName("idRefaccion")]
+		[JsonPropertyName("id")]
 		public int IdRefaccion { get; set; }
 
 		[JsonPropertyName("nombreRefaccion")]
@@ -32,7 +32,7 @@ namespace SICRY_APP.Models
 
 	public class Motor
 	{
-		[JsonPropertyName("idMotor")]
+		[JsonPropertyName("id")]
 		public int IdMotor { get; set; }
 
 		[JsonPropertyName("numeroSerie")]

@@ -1,64 +1,69 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Controls;
+using SICRY_APP.Models;
+using SICRY_APP.Services;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using SICRY_APP.Models;
 
 namespace SICRY_APP.ViewModels
 {
     public partial class CalendarViewModel : ObservableObject
     {
-        // ObservableCollection implementa INotifyCollectionChanged, notificando a la interfaz cuando se agregan o eliminan elementos.
-        [ObservableProperty]
-        private ObservableCollection<Reporte> reportes;
+        [ObservableProperty] private ObservableCollection<ReporteItem> reportes;
+        [ObservableProperty] private bool isBusy;
+        [ObservableProperty] private bool hasReportes;
 
         public CalendarViewModel()
         {
-            Reportes = new ObservableCollection<Reporte>();
-            LoadReportesMock();
+            Reportes = new ObservableCollection<ReporteItem>();
+            _ = CargarReportesAsync();
         }
 
-        private void LoadReportesMock()
-        {
-            // Instanciación de datos estáticos para validación de la interfaz antes de la integración con la API Web.
-            Reportes.Add(new Reporte
-            {
-                Titulo = "Inspección de Válvulas",
-                Estado = "Completado",
-                Ubicacion = "Pozo Sur-5",
-                Descripcion = "Se revisaron las válvulas de presión y se reemplazó el sello principal.",
-                ColorEstadoFondo = "#E8F5E9",
-                ColorEstadoTexto = "#2E7D32"
-            });
-
-            Reportes.Add(new Reporte
-            {
-                Titulo = "Falla Eléctrica",
-                Estado = "Pendiente",
-                Ubicacion = "Estación Central",
-                Descripcion = "Reporte de variaciones de voltaje en el tablero de control B.",
-                ColorEstadoFondo = "#FFF3E0",
-                ColorEstadoTexto = "#E65100"
-            });
-        }
-
-        // Genera un ICommand asíncrono para la acción de edición.
         [RelayCommand]
-        private async Task EditarReporteAsync(Reporte reporteSeleccionado)
+        private async Task CargarReportesAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                Reportes.Clear();
+                var lista = await ApiService.Instance.GetMisReportesAsync();
+                foreach (var r in lista) Reportes.Add(r);
+                HasReportes = Reportes.Count > 0;
+            }
+            finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        private async Task EditarReporteAsync(ReporteItem reporteSeleccionado)
         {
             if (reporteSeleccionado == null) return;
 
-            // La lógica de enrutamiento (Routing) hacia ReportFormPage se implementará aquí posteriormente.
-            await App.Current.MainPage.DisplayAlert("Editar", $"Preparando edición para: {reporteSeleccionado.Titulo}", "OK");
+            var parametros = new Dictionary<string, object> { { "Reporte", reporteSeleccionado } };
+            await Shell.Current.GoToAsync("ReportFormPage", parametros);
         }
 
-        // Genera un ICommand síncrono para la eliminación de registros en la colección en memoria.
         [RelayCommand]
-        private void BorrarReporte(Reporte reporteSeleccionado)
+        private async Task BorrarReporteAsync(ReporteItem reporteSeleccionado)
         {
-            if (reporteSeleccionado != null && Reportes.Contains(reporteSeleccionado))
+            if (reporteSeleccionado == null) return;
+            if (Application.Current?.MainPage == null) return;
+
+            bool confirmar = await Application.Current.MainPage.DisplayAlert(
+                "Eliminar reporte",
+                "¿Estás seguro de que deseas eliminar este reporte?",
+                "Sí", "Cancelar");
+            if (!confirmar) return;
+
+            var ok = await ApiService.Instance.EliminarReporteAsync(reporteSeleccionado.Tipo, reporteSeleccionado.Id);
+            if (ok)
             {
                 Reportes.Remove(reporteSeleccionado);
+                HasReportes = Reportes.Count > 0;
+            }
+            else
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "No se pudo eliminar el reporte.", "OK");
             }
         }
     }

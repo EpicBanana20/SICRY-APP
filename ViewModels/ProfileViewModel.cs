@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using IntelliJ.Lang.Annotations;
 using Microsoft.Maui.Controls;
 using SICRY_APP.Services;
 using SICRY_APP.Views;
