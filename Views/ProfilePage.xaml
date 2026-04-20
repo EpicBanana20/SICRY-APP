@@ -13,31 +13,23 @@
 				<Image Source="user.png" Aspect="AspectFill" />
 			</Frame>
 
-			<VerticalStackLayout Spacing="5" HorizontalOptions="Center">
-				<Label x:Name="lblFullName"
+            <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+                <Label x:Name="lblFullName"
            Text="Cargando nombre..."
            FontSize="22"
            FontAttributes="Bold"
            HorizontalOptions="Center"
            TextColor="#333"/>
 
-				<HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
-					<Label x:Name="lblFullName"
-						   FontSize="22"
-						   FontAttributes="Bold"
-						   HorizontalOptions="Center"
-						   TextColor="#333"/>
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+                    <Label Text="@" FontSize="14" TextColor="#009688" FontAttributes="Bold"/>
+                    <Label x:Name="lblUsername"
+               FontSize="14"
+               TextColor="Gray"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
 
-					<HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
-						<Label Text="@" FontSize="14" TextColor="#009688" FontAttributes="Bold"/>
-						<Label x:Name="lblUsername"
-							   FontSize="14"
-							   TextColor="Gray"/>
-					</HorizontalStackLayout>
-				</HorizontalStackLayout>
-			</VerticalStackLayout>
-
-			<BoxView HeightRequest="1" BackgroundColor="#F0F0F0" Margin="0,10"/>
+            <BoxView HeightRequest="1" BackgroundColor="#F0F0F0" Margin="0,10"/>
 
 			<Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto" ColumnSpacing="15" RowSpacing="20">
 
