@@ -3,6 +3,8 @@ using SICRY_APP.Models;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.IO;
+using Microsoft.Maui.Storage;
 
 namespace SICRY_APP.Services
 {
@@ -18,6 +20,9 @@ namespace SICRY_APP.Services
         // Caches para evitar múltiples llamadas al cargar la lista
         private List<UsuarioMini> _usuariosCache;
         private List<PozoMini> _pozosCache;
+        private List<CategoriaFallo> _categoriasCache;
+        private List<Refaccion> _refaccionesCache;
+        private List<Motor> _motoresCache;
 
         private ApiService()
         {
@@ -242,6 +247,258 @@ namespace SICRY_APP.Services
                 _pozosCache = new List<PozoMini>();
                 return _pozosCache;
             }
+        }
+
+        // ============ CATÁLOGOS ============
+
+        public async Task<List<CategoriaFallo>> GetCategoriasFallosAsync()
+        {
+            if (_categoriasCache != null) return _categoriasCache;
+            try
+            {
+                var token = await GetTokenAsync();
+                var req = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/categoriafallos");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) { _categoriasCache = new(); return _categoriasCache; }
+                _categoriasCache = await resp.Content.ReadFromJsonAsync<List<CategoriaFallo>>() ?? new();
+                return _categoriasCache;
+            }
+            catch { _categoriasCache = new(); return _categoriasCache; }
+        }
+
+        public async Task<List<Refaccion>> GetRefaccionesAsync()
+        {
+            if (_refaccionesCache != null) return _refaccionesCache;
+            try
+            {
+                var token = await GetTokenAsync();
+                var req = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/refacciones");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) { _refaccionesCache = new(); return _refaccionesCache; }
+                _refaccionesCache = await resp.Content.ReadFromJsonAsync<List<Refaccion>>() ?? new();
+                return _refaccionesCache;
+            }
+            catch { _refaccionesCache = new(); return _refaccionesCache; }
+        }
+
+        public async Task<List<Motor>> GetMotoresAsync()
+        {
+            if (_motoresCache != null) return _motoresCache;
+            try
+            {
+                var token = await GetTokenAsync();
+                var req = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/motores");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) { _motoresCache = new(); return _motoresCache; }
+                _motoresCache = await resp.Content.ReadFromJsonAsync<List<Motor>>() ?? new();
+                return _motoresCache;
+            }
+            catch { _motoresCache = new(); return _motoresCache; }
+        }
+
+        // ============ CREAR REPORTE (según rol) ============
+        // Devuelve el ID del reporte creado, o 0 si falló
+
+        public async Task<int> CrearReporteElectricistaAsync(int idAsignacion, int idPozo, bool esConclusivo, string descripcion)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                var body = new
+                {
+                    idAsignacion,
+                    idPozo,
+                    repFechaReporte = DateTime.UtcNow,
+                    repEsConclusivo = esConclusivo,
+                    repDescripcion = descripcion
+                };
+                var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/repelectricista")
+                { Content = JsonContent.Create(body) };
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                var contenido = await resp.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"===== RepElectricista status={resp.StatusCode} body={contenido} =====");
+                if (!resp.IsSuccessStatusCode) return 0;
+                var result = await resp.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                return result.TryGetProperty("idReporteCampo", out var idProp) ? idProp.GetInt32() : 0;
+            }
+            catch { return 0; }
+        }
+
+        public async Task<int> CrearReporteEmbobinadoAsync(int idAsignacion, int idMotor, bool esConclusivo, string descripcion)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                var body = new
+                {
+                    idAsignacion,
+                    idMotor,
+                    repEmbFechaReporte = DateTime.UtcNow,
+                    repEmbEsConclusivo = esConclusivo,
+                    repEmbDescripcion = descripcion,
+                    repEmbTieneHorasExtras = false,
+                    repEmbHorasExtras = 0
+                };
+                var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/repembobinado")
+                { Content = JsonContent.Create(body) };
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return 0;
+                var result = await resp.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                return result.TryGetProperty("idReporteEmbobinado", out var idProp) ? idProp.GetInt32() : 0;
+            }
+            catch { return 0; }
+        }
+
+        public async Task<int> CrearReporteMantenimientoAsync(int idAsignacion, int idMotor, bool esConclusivo, string descripcion)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                var body = new
+                {
+                    idAsignacion,
+                    idMotor,
+                    repManFechaReporte = DateTime.UtcNow,
+                    repManEsConclusivo = esConclusivo,
+                    repManDescripcion = descripcion,
+                    repManTieneHorasExtras = false,
+                    repManHorasExtras = 0
+                };
+                var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/repmantenimiento")
+                { Content = JsonContent.Create(body) };
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return 0;
+                var result = await resp.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                return result.TryGetProperty("idReporteMantenimiento", out var idProp) ? idProp.GetInt32() : 0;
+            }
+            catch { return 0; }
+        }
+
+        // ============ FALLOS Y REFACCIONES USADAS ============
+
+        public async Task<bool> AgregarFalloReportadoAsync(int idCategoriaFallo, string tipoReporte, int idReporte)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                var body = new Dictionary<string, object>
+                {
+                    ["idCategoriaFalloFk"] = idCategoriaFallo
+                };
+                switch (tipoReporte)
+                {
+                    case "electricista": body["idReporteCampoFk"] = idReporte; break;
+                    case "embobinado": body["idReporteEmbobinadoFk"] = idReporte; break;
+                    case "mantenimiento": body["idReporteMantenimientoFk"] = idReporte; break;
+                }
+                var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/fallosreportados")
+                { Content = JsonContent.Create(body) };
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                return resp.IsSuccessStatusCode;
+            }
+            catch { return false; }
+        }
+
+        public async Task<bool> AgregarRefaccionUsadaAsync(int idRefaccion, int cantidad, string tipoReporte, int idReporte)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                var body = new Dictionary<string, object>
+                {
+                    ["idRefaccion"] = idRefaccion,
+                    ["cantidad"] = cantidad
+                };
+                switch (tipoReporte)
+                {
+                    case "electricista": body["idReporteCampo"] = idReporte; break;
+                    case "embobinado": body["idReporteEmbobinado"] = idReporte; break;
+                    case "mantenimiento": body["idReporteMantenimiento"] = idReporte; break;
+                }
+                var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/refaccionesusadas")
+                { Content = JsonContent.Create(body) };
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                return resp.IsSuccessStatusCode;
+            }
+            catch { return false; }
+        }
+
+        // ============ EVIDENCIAS (BLOB + BD) ============
+
+        public async Task<string> SubirEvidenciaAsync(Stream fotoStream, string extension, int idAsignacion, string tipoReporte, int idReporte)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+
+                // 1. Pedir SAS URL a la API
+                var url = $"{_baseUrl}/evidenciasupload/sas?idAsignacion={idAsignacion}&tipoReporte={tipoReporte}&idReporte={idReporte}&extension={Uri.EscapeDataString(extension)}";
+                var req = new HttpRequestMessage(HttpMethod.Get, url);
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return null;
+                var sas = await resp.Content.ReadFromJsonAsync<SasResponse>();
+                if (sas == null) return null;
+
+                // 2. Subir foto directo a Azure Blob con PUT
+                using var httpBlob = new HttpClient();
+                using var content = new StreamContent(fotoStream);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    extension.ToLower() == ".png" ? "image/png" : "image/jpeg");
+                var putReq = new HttpRequestMessage(HttpMethod.Put, sas.UploadUrl) { Content = content };
+                putReq.Headers.Add("x-ms-blob-type", "BlockBlob");
+                var uploadResp = await httpBlob.SendAsync(putReq);
+                if (!uploadResp.IsSuccessStatusCode) return null;
+
+                // 3. Registrar la evidencia en la BD
+                var body = new Dictionary<string, object>
+                {
+                    ["evUrlArchivo"] = sas.PublicUrl,
+                    ["evTipoEvidencia"] = extension.TrimStart('.').ToLower()
+                };
+                switch (tipoReporte)
+                {
+                    case "electricista": body["idReporteCampoFk"] = idReporte; break;
+                    case "embobinado": body["idReporteEmbobinadoFk"] = idReporte; break;
+                    case "mantenimiento": body["idReporteMantenimientoFk"] = idReporte; break;
+                }
+                var evReq = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/evidencias")
+                { Content = JsonContent.Create(body) };
+                evReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                await _httpClient.SendAsync(evReq);
+
+                return sas.PublicUrl;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error SubirEvidencia: {ex.Message}");
+                return null;
+            }
+        }
+
+        // ============ ACTUALIZAR ESTADO DE ASIGNACIÓN ============
+
+        public async Task<bool> CambiarEstadoAsignacionAsync(int idAsignacion, string nuevoEstado)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                var body = new { estado = nuevoEstado };
+                var req = new HttpRequestMessage(HttpMethod.Patch, $"{_baseUrl}/asignaciones/{idAsignacion}/estado")
+                { Content = JsonContent.Create(body) };
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                return resp.IsSuccessStatusCode;
+            }
+            catch { return false; }
         }
 
         public async Task<string> GetTokenAsync()

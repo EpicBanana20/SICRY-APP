@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:SICRY_APP.ViewModels"
+             x:Class="SICRY_APP.Views.ReportFormPage"
+             Title="{Binding TituloPantalla}"
+             BackgroundColor="White">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="15" Padding="20">
+
+            <Frame BackgroundColor="#E0F2F1" BorderColor="Transparent" CornerRadius="12" Padding="12" HasShadow="False">
+                <VerticalStackLayout Spacing="3">
+                    <Label Text="Asignación" FontSize="11" TextColor="#00695C"/>
+                    <Label Text="{Binding AsignacionSeleccionada.Pozo, StringFormat='📍 {0}'}" FontAttributes="Bold" FontSize="14" TextColor="#004D40"/>
+                    <Label Text="{Binding AsignacionSeleccionada.InstruccionInicial}" FontSize="12" TextColor="#37474F" MaxLines="2" LineBreakMode="TailTruncation"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Label Text="Descripción del reporte *" FontAttributes="Bold" TextColor="#3E2723"/>
+            <Frame BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
+                <Editor Text="{Binding Descripcion}" HeightRequest="100" Placeholder="Describe el trabajo realizado..." PlaceholderColor="Gray"/>
+            </Frame>
+
+            <HorizontalStackLayout Spacing="10">
+                <CheckBox IsChecked="{Binding EsConclusivo}" Color="#009688"/>
+                <Label Text="¿Es conclusivo?" VerticalOptions="Center" TextColor="#3E2723"/>
+            </HorizontalStackLayout>
+
+            <!-- MOTOR (solo embobinado/mantenimiento) -->
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding MostrarMotor}">
+                <Label Text="Motor *" FontAttributes="Bold" TextColor="#3E2723"/>
+                <Frame BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
+                    <Picker ItemsSource="{Binding Motores}" SelectedItem="{Binding MotorSeleccionado}" Title="Selecciona un motor"/>
+                </Frame>
+            </VerticalStackLayout>
+
+            <!-- FALLOS -->
+            <Label Text="Fallos reportados" FontAttributes="Bold" TextColor="#3E2723" Margin="0,10,0,0"/>
+            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                <Frame Grid.Column="0" BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
+                    <Picker ItemsSource="{Binding CategoriasFallos}" SelectedItem="{Binding FalloParaAgregar}" Title="Selecciona un fallo"/>
+                </Frame>
+                <Button Grid.Column="1" Text="+" BackgroundColor="#009688" TextColor="White" WidthRequest="45" HeightRequest="45" CornerRadius="22" FontSize="20" Command="{Binding AgregarFalloCommand}"/>
+            </Grid>
+            <CollectionView ItemsSource="{Binding FallosSeleccionados}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BackgroundColor="#FFF3E0" BorderColor="Transparent" CornerRadius="10" Padding="10" Margin="0,0,0,5" HasShadow="False">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Label Grid.Column="0" Text="{Binding CategoriaFalloNombre}" TextColor="#E65100" VerticalOptions="Center"/>
+                                <Button Grid.Column="1" Text="✕" BackgroundColor="Transparent" TextColor="#C62828" FontSize="14" WidthRequest="30" HeightRequest="30" Padding="0"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ReportFormViewModel}}, Path=QuitarFalloCommand}"
+                                        CommandParameter="{Binding .}"/>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- REFACCIONES -->
+            <Label Text="Refacciones utilizadas" FontAttributes="Bold" TextColor="#3E2723" Margin="0,10,0,0"/>
+            <Grid ColumnDefinitions="*, 70, Auto" ColumnSpacing="8">
+                <Frame Grid.Column="0" BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
+                    <Picker ItemsSource="{Binding Refacciones}" SelectedItem="{Binding RefaccionParaAgregar}" Title="Refacción"/>
+                </Frame>
+                <Frame Grid.Column="1" BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
+                    <Entry Text="{Binding CantidadRefaccion}" Keyboard="Numeric" HorizontalTextAlignment="Center" Placeholder="Cant."/>
+                </Frame>
+                <Button Grid.Column="2" Text="+" BackgroundColor="#009688" TextColor="White" WidthRequest="45" HeightRequest="45" CornerRadius="22" FontSize="20" Command="{Binding AgregarRefaccionCommand}"/>
+            </Grid>
+            <CollectionView ItemsSource="{Binding RefaccionesSeleccionadas}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BackgroundColor="#E3F2FD" BorderColor="Transparent" CornerRadius="10" Padding="10" Margin="0,0,0,5" HasShadow="False">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Label Grid.Column="0" Text="{Binding DisplayText}" TextColor="#1565C0" VerticalOptions="Center"/>
+                                <Button Grid.Column="1" Text="✕" BackgroundColor="Transparent" TextColor="#C62828" FontSize="14" WidthRequest="30" HeightRequest="30" Padding="0"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ReportFormViewModel}}, Path=QuitarRefaccionCommand}"
+                                        CommandParameter="{Binding .}"/>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- EVIDENCIAS -->
+            <Label Text="Evidencias (fotos)" FontAttributes="Bold" TextColor="#3E2723" Margin="0,10,0,0"/>
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                <Button Grid.Column="0" Text="📷 Tomar foto" BackgroundColor="#009688" TextColor="White" CornerRadius="10" HeightRequest="45" Command="{Binding TomarFotoCommand}"/>
+                <Button Grid.Column="1" Text="🖼️ Galería" BackgroundColor="#455A64" TextColor="White" CornerRadius="10" HeightRequest="45" Command="{Binding ElegirFotoCommand}"/>
+            </Grid>
+            <CollectionView ItemsSource="{Binding FotosSeleccionadas}" ItemsLayout="HorizontalList" HeightRequest="100">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="5" WidthRequest="90" HeightRequest="90">
+                            <Frame CornerRadius="10" Padding="0" IsClippedToBounds="True" BorderColor="#CCC" HasShadow="False">
+                                <Image Source="{Binding FullPath}" Aspect="AspectFill"/>
+                            </Frame>
+                            <Button Text="✕" BackgroundColor="#C62828" TextColor="White" FontSize="10" WidthRequest="24" HeightRequest="24" CornerRadius="12" Padding="0" HorizontalOptions="End" VerticalOptions="Start"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ReportFormViewModel}}, Path=QuitarFotoCommand}"
+                                    CommandParameter="{Binding .}"/>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- BOTONES -->
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,20,0,0">
+                <Button Grid.Column="0" Text="Cancelar" BackgroundColor="Transparent" TextColor="#757575" BorderColor="#757575" BorderWidth="1" CornerRadius="10" HeightRequest="50" Command="{Binding CancelarCommand}"/>
+                <Button Grid.Column="1" Text="Guardar Reporte" BackgroundColor="#009688" TextColor="White" FontAttributes="Bold" CornerRadius="10" HeightRequest="50" Command="{Binding GuardarReporteCommand}"/>
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#009688" HeightRequest="40"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
