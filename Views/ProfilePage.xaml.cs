@@ -1,9 +1,16 @@
-namespace SICRY_APP.Views;
+using Microsoft.Maui.Controls;
+using SICRY_APP.ViewModels;
 
-public partial class ProfilePage : ContentPage
+namespace SICRY_APP.Views
 {
-	public ProfilePage()
+	public partial class ProfilePage : ContentPage
 	{
-		InitializeComponent();
+		public ProfilePage()
+		{
+			InitializeComponent();
+
+			// Asignación de la instancia de ProfileViewModel como BindingContext
+			BindingContext = new ProfileViewModel();
+		}
 	}
 }
