@@ -439,26 +439,28 @@ namespace SICRY_APP.Services
             {
                 var token = await GetTokenAsync();
 
-                // 1. Pedir SAS URL a la API
-                var url = $"{_baseUrl}/evidenciasupload/sas?idAsignacion={idAsignacion}&tipoReporte={tipoReporte}&idReporte={idReporte}&extension={Uri.EscapeDataString(extension)}";
+                // 1. Pedir SAS URL
+                var url = $"{_baseUrl}/evidencias/sas?idAsignacion={idAsignacion}&tipoReporte={tipoReporte}&idReporte={idReporte}&extension={Uri.EscapeDataString(extension)}";
                 var req = new HttpRequestMessage(HttpMethod.Get, url);
                 req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var resp = await _httpClient.SendAsync(req);
                 if (!resp.IsSuccessStatusCode) return null;
+
+                // Asumiendo que creaste una clase SasResponse con UploadUrl y PublicUrl
                 var sas = await resp.Content.ReadFromJsonAsync<SasResponse>();
                 if (sas == null) return null;
 
-                // 2. Subir foto directo a Azure Blob con PUT
-                using var httpBlob = new HttpClient();
+                // 2. Subir foto a Azure Blob (Reutilizando _httpClient)
                 using var content = new StreamContent(fotoStream);
                 content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
                     extension.ToLower() == ".png" ? "image/png" : "image/jpeg");
+
                 var putReq = new HttpRequestMessage(HttpMethod.Put, sas.UploadUrl) { Content = content };
                 putReq.Headers.Add("x-ms-blob-type", "BlockBlob");
-                var uploadResp = await httpBlob.SendAsync(putReq);
+                var uploadResp = await _httpClient.SendAsync(putReq);
                 if (!uploadResp.IsSuccessStatusCode) return null;
 
-                // 3. Registrar la evidencia en la BD
+                // 3. Registrar evidencia en BD
                 var body = new Dictionary<string, object>
                 {
                     ["evUrlArchivo"] = sas.PublicUrl,

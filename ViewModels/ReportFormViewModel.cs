@@ -258,20 +258,37 @@ namespace SICRY_APP.ViewModels
                     await ApiService.Instance.AgregarRefaccionUsadaAsync(r.Refaccion.IdRefaccion, r.Cantidad, TipoReporte, idReporte);
 
                 // 4. Subir evidencias (fotos)
+                bool huboErroresFotos = false;
+
                 foreach (var foto in FotosSeleccionadas)
                 {
                     using var stream = await foto.OpenReadAsync();
                     var ext = System.IO.Path.GetExtension(foto.FileName);
                     if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
-                    await ApiService.Instance.SubirEvidenciaAsync(
+
+                    var urlResult = await ApiService.Instance.SubirEvidenciaAsync(
                         stream, ext, AsignacionSeleccionada.IdAsignacion, TipoReporte, idReporte);
+
+                    if (urlResult == null)
+                    {
+                        huboErroresFotos = true;
+                    }
                 }
 
-                // 5. Si es conclusivo → marcar asignación como Completada
+                // 5. Cerrar asignación si es conclusivo
                 if (EsConclusivo)
                     await ApiService.Instance.CambiarEstadoAsignacionAsync(AsignacionSeleccionada.IdAsignacion, "Completada");
 
-                await Application.Current.MainPage.DisplayAlert("Éxito", "Reporte guardado correctamente.", "OK");
+                // 6. Alertas finales
+                if (huboErroresFotos)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Aviso", "El reporte se guardó, pero algunas evidencias no pudieron subirse por problemas de red.", "OK");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Éxito", "Reporte y evidencias guardados correctamente.", "OK");
+                }
+
                 await Shell.Current.GoToAsync("..");
             }
             finally { IsBusy = false; }
