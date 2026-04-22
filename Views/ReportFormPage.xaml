@@ -19,7 +19,7 @@
 
             <Label Text="Descripción del reporte *" FontAttributes="Bold" TextColor="#3E2723"/>
             <Frame BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
-                <Editor Text="{Binding Descripcion}" HeightRequest="100" Placeholder="Describe el trabajo realizado..." PlaceholderColor="Gray"/>
+                <Editor Text="{Binding Descripcion}" TextColor="Black" HeightRequest="100" Placeholder="Describe el trabajo realizado..." PlaceholderColor="Gray"/>
             </Frame>
 
             <HorizontalStackLayout Spacing="10">
@@ -31,7 +31,7 @@
             <VerticalStackLayout Spacing="8" IsVisible="{Binding MostrarMotor}">
                 <Label Text="Motor *" FontAttributes="Bold" TextColor="#3E2723"/>
                 <Frame BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
-                    <Picker ItemsSource="{Binding Motores}" SelectedItem="{Binding MotorSeleccionado}" Title="Selecciona un motor"/>
+                    <Picker ItemsSource="{Binding Motores}" TextColor="Black" SelectedItem="{Binding MotorSeleccionado}" Title="Selecciona un motor"/>
                 </Frame>
             </VerticalStackLayout>
 
@@ -40,7 +40,7 @@
             <Label Text="Fallos reportados" FontAttributes="Bold" TextColor="#3E2723" Margin="0,10,0,0"/>
             <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
                 <Frame Grid.Column="0" BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
-                    <Picker ItemsSource="{Binding CategoriasFallos}" SelectedItem="{Binding FalloParaAgregar}" Title="Selecciona un fallo"/>
+                        <Picker ItemsSource="{Binding CategoriasFallos}" TextColor="Black" SelectedItem="{Binding FalloParaAgregar}" Title="Selecciona un fallo"/>
                 </Frame>
                 <Button Grid.Column="1" Text="+" BackgroundColor="#009688" TextColor="White" WidthRequest="45" HeightRequest="45" CornerRadius="22" FontSize="20" Command="{Binding AgregarFalloCommand}"/>
             </Grid>
@@ -63,10 +63,10 @@
             <Label Text="Refacciones utilizadas" FontAttributes="Bold" TextColor="#3E2723" Margin="0,10,0,0"/>
             <Grid ColumnDefinitions="*, 70, Auto" ColumnSpacing="8">
                 <Frame Grid.Column="0" BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
-                    <Picker ItemsSource="{Binding Refacciones}" SelectedItem="{Binding RefaccionParaAgregar}" Title="Refacción"/>
+                        <Picker ItemsSource="{Binding Refacciones}" TextColor="Black" SelectedItem="{Binding RefaccionParaAgregar}" Title="Refacción"/>
                 </Frame>
                 <Frame Grid.Column="1" BorderColor="#CCC" CornerRadius="10" Padding="5" HasShadow="False">
-                    <Entry Text="{Binding CantidadRefaccion}" Keyboard="Numeric" HorizontalTextAlignment="Center" Placeholder="Cant."/>
+                        <Entry Text="{Binding CantidadRefaccion}" TextColor="Black" Keyboard="Numeric" HorizontalTextAlignment="Center" Placeholder="Cant."/>
                 </Frame>
                 <Button Grid.Column="2" Text="+" BackgroundColor="#009688" TextColor="White" WidthRequest="45" HeightRequest="45" CornerRadius="22" FontSize="20" Command="{Binding AgregarRefaccionCommand}"/>
             </Grid>

@@ -65,10 +65,51 @@
 
         <ScrollView Grid.Row="1" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,15">
             <HorizontalStackLayout Spacing="10" Padding="0,5">
-                <Button Text="Todas" BackgroundColor="White" TextColor="Gray" CornerRadius="20" HeightRequest="40" Padding="20,0" FontSize="12"/>
-                <Button Text="Por hacer" BackgroundColor="#009688" TextColor="White" FontAttributes="Bold" CornerRadius="20" HeightRequest="40" Padding="20,0" FontSize="12"/>
-                <Button Text="En progreso" BackgroundColor="White" TextColor="Gray" CornerRadius="20" HeightRequest="40" Padding="20,0" FontSize="12"/>
-                <Button Text="Completadas" BackgroundColor="White" TextColor="Gray" CornerRadius="20" HeightRequest="40" Padding="20,0" FontSize="12"/>
+
+                <Button Text="Todas" BackgroundColor="White" TextColor="Gray" CornerRadius="20" HeightRequest="40" Padding="20,0" FontSize="12"
+            Command="{Binding FiltrarCommand}" CommandParameter="Todas">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding FiltroActual}" Value="Todas">
+                            <Setter Property="BackgroundColor" Value="#009688" />
+                            <Setter Property="TextColor" Value="White" />
+                            <Setter Property="FontAttributes" Value="Bold" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+
+                <Button Text="Por hacer" BackgroundColor="White" TextColor="Gray" CornerRadius="20" HeightRequest="40" Padding="20,0" FontSize="12"
+            Command="{Binding FiltrarCommand}" CommandParameter="Por hacer">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding FiltroActual}" Value="Por hacer">
+                            <Setter Property="BackgroundColor" Value="#009688" />
+                            <Setter Property="TextColor" Value="White" />
+                            <Setter Property="FontAttributes" Value="Bold" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+
+                <Button Text="En progreso" BackgroundColor="White" TextColor="Gray" CornerRadius="20" HeightRequest="40" Padding="20,0" FontSize="12"
+            Command="{Binding FiltrarCommand}" CommandParameter="Inconclusa">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding FiltroActual}" Value="En progreso">
+                            <Setter Property="BackgroundColor" Value="#009688" />
+                            <Setter Property="TextColor" Value="White" />
+                            <Setter Property="FontAttributes" Value="Bold" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+
+                <Button Text="Completadas" BackgroundColor="White" TextColor="Gray" CornerRadius="20" HeightRequest="40" Padding="20,0" FontSize="12"
+            Command="{Binding FiltrarCommand}" CommandParameter="Completadas">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding FiltroActual}" Value="Completadas">
+                            <Setter Property="BackgroundColor" Value="#009688" />
+                            <Setter Property="TextColor" Value="White" />
+                            <Setter Property="FontAttributes" Value="Bold" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+
             </HorizontalStackLayout>
         </ScrollView>
 
