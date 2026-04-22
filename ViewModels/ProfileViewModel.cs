@@ -1,85 +1,96 @@
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Maui.Controls;
+using SICRY_APP.Models;
 using SICRY_APP.Services;
-using SICRY_APP.Views;
 
 namespace SICRY_APP.ViewModels
 {
-	public partial class ProfileViewModel : ObservableObject
-	{
-		// Propiedades reactivas que se enlazan con la interfaz (XAML)
-		[ObservableProperty]
-		private string fullName;
+    public partial class ProfileViewModel : ObservableObject
+    {
+        [ObservableProperty] private string nombreUsuario;
+        [ObservableProperty] private string rolUsuario;
+        [ObservableProperty] private string inicial;
+        [ObservableProperty] private string colorGafete = "#009688"; // Teal por defecto
 
-		[ObservableProperty]
-		private string userName;
+        [ObservableProperty] private string totalCompletados = "0";
+        [ObservableProperty] private string totalPendientes = "0";
 
-		[ObservableProperty]
-		private string rol;
+        [ObservableProperty] private bool isBusy;
 
-		[ObservableProperty]
-		private bool isBusy;
+        public ProfileViewModel()
+        {
+            // Opcional: poner valores por defecto mientras carga
+            NombreUsuario = "Cargando...";
+            RolUsuario = "...";
+            Inicial = "";
+        }
 
-		public ProfileViewModel()
-		{
-			// Valores iniciales mientras se carga la información real
-			FullName = "Cargando...";
-			UserName = "...";
-			Rol = "...";
+        [RelayCommand]
+        public async Task CargarPerfilAsync()
+        {
+            if (IsBusy) return;
 
-			// Disparamos la carga desde el token JWT
-			_ = CargarDatosUsuarioAsync();
-		}
+            try
+            {
+                IsBusy = true;
 
-		private async Task CargarDatosUsuarioAsync()
-		{
-			try
-			{
-				IsBusy = true;
+                // 1. Obtener datos del usuario desde el Token
+                var perfil = await ApiService.Instance.GetPerfilDesdeTokenAsync();
+                if (perfil != null)
+                {
+                    NombreUsuario = perfil.NombreCompleto;
+                    RolUsuario = perfil.RolNombre;
+                    Inicial = !string.IsNullOrEmpty(perfil.NombreCompleto)
+                              ? perfil.NombreCompleto.Substring(0, 1).ToUpper()
+                              : "U";
 
-				// Decodifica el token guardado tras el login y extrae los claims
-				var perfil = await ApiService.Instance.GetPerfilDesdeTokenAsync();
+                    // Colores institucionales según la especialidad
+                    ColorGafete = perfil.RolNombre?.ToLower() switch
+                    {
+                        "electricista" => "#1E88E5", // Azul vibrante
+                        "embobinador" => "#FB8C00",  // Naranja
+                        "mecanico" or "mantenimiento" => "#546E7A", // Gris azulado
+                        "supervisor" => "#8E24AA",   // Morado oscuro
+                        _ => "#009688"               // Verde Teal (Defecto)
+                    };
+                }
 
-				if (perfil != null)
-				{
-					FullName = perfil.NombreCompleto;
-					UserName = perfil.Username;
-					Rol = perfil.RolNombre;
-				}
-				else
-				{
-					// No hay token o está corrupto
-					FullName = "Sin sesión";
-					UserName = "desconocido";
-					Rol = "N/A";
-				}
-			}
-			finally
-			{
-				IsBusy = false;
-			}
-		}
+                // 2. Obtener Estadísticas (Contar sus asignaciones)
+                var misAsignaciones = await ApiService.Instance.GetMisAsignacionesAsync();
 
-		// ICommand asíncrono para cerrar sesión
-		[RelayCommand]
-		private async Task CerrarSesionAsync()
-		{
-			if (Application.Current?.MainPage == null) return;
+                int pendientes = misAsignaciones.Count(a => a.Estado == "Pendiente" || a.Estado == "Inconclusa");
+                int completadas = misAsignaciones.Count(a => a.Estado == "Completada");
 
-			bool confirmar = await Application.Current.MainPage.DisplayAlert(
-				"Cerrar Sesión",
-				"¿Estás seguro de que deseas salir?",
-				"Sí", "Cancelar");
+                TotalPendientes = pendientes.ToString();
+                TotalCompletados = completadas.ToString();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error cargando perfil: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
-			if (!confirmar) return;
+        [RelayCommand]
+        private async Task CerrarSesionAsync()
+        {
+            bool respuesta = await Application.Current.MainPage.DisplayAlert(
+                "Cerrar Sesión",
+                "¿Estás seguro de que deseas salir de tu cuenta?",
+                "Sí, salir",
+                "Cancelar");
 
-			// Borra el token guardado en SecureStorage
-			ApiService.Instance.Logout();
+            if (respuesta)
+            {
+                // 1. Borrar el token y limpiar los datos de sesión en el servicio
+                ApiService.Instance.Logout();
 
-			// Regresa al Login
-			Application.Current.MainPage = new NavigationPage(new LoginPage());
-		}
-	}
+                // 2. Método destructor seguro: Cambiar la página principal de la app de golpe
+                Application.Current.MainPage = new Views.LoginPage();
+            }
+        }
+    }
 }
