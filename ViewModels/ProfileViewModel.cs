@@ -37,8 +37,8 @@ namespace SICRY_APP.ViewModels
                 // 1. Obtener datos del usuario desde el Token
                 var perfil = await ApiService.Instance.GetPerfilDesdeTokenAsync();
                 if (perfil != null)
-                {                    string nombreReal = Preferences.Default.Get("user_name", "Usuario");
-                    NombreUsuario = nombreReal;
+                {
+                    NombreUsuario = perfil.NombreCompleto;
                     RolUsuario = perfil.RolNombre;
                     Inicial = !string.IsNullOrEmpty(perfil.NombreCompleto)
                               ? perfil.NombreCompleto.Substring(0, 1).ToUpper()
