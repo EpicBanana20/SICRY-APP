@@ -41,15 +41,7 @@ namespace SICRY_APP.Services
                 var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
                 if (string.IsNullOrEmpty(result?.Token)) return false;
 
-                // Guarda el token seguro
                 await SecureStorage.Default.SetAsync(TokenKey, result.Token);
-
-                // NUEVA LÍNEA: Guarda el nombre formateado para que AppShell lo encuentre al abrir la app
-                if (!string.IsNullOrEmpty(result?.Nombre))
-                {
-                    Microsoft.Maui.Storage.Preferences.Default.Set("user_name", result.Nombre);
-                }
-
                 return true;
             }
             catch
@@ -519,7 +511,6 @@ namespace SICRY_APP.Services
         public void Logout()
         {
             SecureStorage.Default.Remove(TokenKey);
-            Microsoft.Maui.Storage.Preferences.Default.Remove("user_name");
             _usuariosCache = null;
             _pozosCache = null;
             _categoriasCache = null;
@@ -736,9 +727,5 @@ namespace SICRY_APP.Services
     public class LoginResponse
     {
         public string Token { get; set; }
-
-        public string Nombre { get; set; }
-        public string Rol { get; set; }
-        public string RolNombre { get; set; }
     }
 }

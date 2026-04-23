@@ -1,5 +1,5 @@
 ﻿using Microsoft.Maui.Controls;
-using SICRY_APP.Services;
+using SICRY_APP.Views; // Importamos la carpeta de las vistas
 
 namespace SICRY_APP
 {
@@ -8,29 +8,12 @@ namespace SICRY_APP
         public App()
         {
             InitializeComponent();
-
-            // 1. Iniciamos la app temporalmente con una página en blanco o el Login
-            MainPage = new NavigationPage(new ContentPage { Title = "Cargando..." });
-
-            // 2. Mandamos a llamar a nuestro guardia de seguridad
-            VerificarSesionAutomatica();
         }
 
-        private async void VerificarSesionAutomatica()
+        protected override Window CreateWindow(IActivationState? activationState)
         {
-            // Le pedimos el token al servicio (el cual lo busca en el SecureStorage)
-            var token = await ApiService.Instance.GetTokenAsync();
-
-            if (!string.IsNullOrEmpty(token))
-            {
-                // ¡TIENE TOKEN! Nos saltamos el Login y vamos directo a la aplicación
-                MainPage = new AppShell();
-            }
-            else
-            {
-                // NO TIENE TOKEN (o cerró sesión). Lo mandamos a la pantalla de Login
-                MainPage = new Views.LoginPage();
-            }
+            // Arrancamos la aplicación directamente en la pantalla de Login
+            return new Window(new LoginPage());
         }
     }
 }
