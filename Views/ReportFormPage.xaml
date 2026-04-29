@@ -107,7 +107,36 @@
             </CollectionView>
 
             </VerticalStackLayout>
+            <!-- HORAS EXTRAS -->
+            <VerticalStackLayout Spacing="10" Margin="0,15,0,0">
+                <HorizontalStackLayout Spacing="10">
+                    <CheckBox IsChecked="{Binding TieneHorasExtras}" Color="#009688"/>
+                    <Label Text="¿Hubo horas extras?" VerticalOptions="Center" TextColor="#3E2723"/>
+                </HorizontalStackLayout>
 
+                <Frame BackgroundColor="#F5F5F5" BorderColor="Transparent" CornerRadius="12" Padding="15,10" HasShadow="False"
+           IsVisible="{Binding TieneHorasExtras}">
+                    <Grid ColumnDefinitions="*, Auto, Auto, Auto" ColumnSpacing="10" VerticalOptions="Center">
+                        <Label Grid.Column="0" Text="Horas extras" VerticalOptions="Center" TextColor="#3E2723" FontAttributes="Bold"/>
+
+                        <Button Grid.Column="1" Text="−" 
+                    BackgroundColor="#009688" TextColor="White" 
+                    WidthRequest="40" HeightRequest="40" CornerRadius="20" 
+                    FontSize="20" Padding="0"
+                    Command="{Binding DecrementarHorasCommand}"/>
+
+                        <Label Grid.Column="2" Text="{Binding HorasExtras}" 
+                   FontSize="20" FontAttributes="Bold" TextColor="#009688" 
+                   WidthRequest="40" HorizontalTextAlignment="Center" VerticalOptions="Center"/>
+
+                        <Button Grid.Column="3" Text="+" 
+                    BackgroundColor="#009688" TextColor="White" 
+                    WidthRequest="40" HeightRequest="40" CornerRadius="20" 
+                    FontSize="20" Padding="0"
+                    Command="{Binding IncrementarHorasCommand}"/>
+                    </Grid>
+                </Frame>
+            </VerticalStackLayout>
             <!-- BOTONES -->
             <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,20,0,0">
                 <Button Grid.Column="0" Text="Cancelar" BackgroundColor="Transparent" TextColor="#757575" BorderColor="#757575" BorderWidth="1" CornerRadius="10" HeightRequest="50" Command="{Binding CancelarCommand}"/>

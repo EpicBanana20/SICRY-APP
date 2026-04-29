@@ -302,7 +302,8 @@ namespace SICRY_APP.Services
         // ============ CREAR REPORTE (según rol) ============
         // Devuelve el ID del reporte creado, o 0 si falló
 
-        public async Task<int> CrearReporteElectricistaAsync(int idAsignacion, int idPozo, bool esConclusivo, string descripcion)
+        public async Task<int> CrearReporteElectricistaAsync(int idAsignacion, int idPozo, bool esConclusivo, string descripcion,
+    bool tieneHorasExtras, int horasExtras)
         {
             try
             {
@@ -313,7 +314,9 @@ namespace SICRY_APP.Services
                     idPozo,
                     repFechaReporte = DateTime.UtcNow,
                     repEsConclusivo = esConclusivo,
-                    repDescripcion = descripcion
+                    repDescripcion = descripcion,
+                    repTieneHorasExtras = tieneHorasExtras,
+                    repHorasExtras = tieneHorasExtras ? (decimal?)horasExtras : null
                 };
                 var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/repelectricista")
                 { Content = JsonContent.Create(body) };
@@ -328,7 +331,8 @@ namespace SICRY_APP.Services
             catch { return 0; }
         }
 
-        public async Task<int> CrearReporteEmbobinadoAsync(int idAsignacion, int idMotor, bool esConclusivo, string descripcion)
+        public async Task<int> CrearReporteEmbobinadoAsync(int idAsignacion, int idMotor, bool esConclusivo, string descripcion,
+    bool tieneHorasExtras, int horasExtras)
         {
             try
             {
@@ -340,8 +344,8 @@ namespace SICRY_APP.Services
                     repEmbFechaReporte = DateTime.UtcNow,
                     repEmbEsConclusivo = esConclusivo,
                     repEmbDescripcion = descripcion,
-                    repEmbTieneHorasExtras = false,
-                    repEmbHorasExtras = 0
+                    repEmbTieneHorasExtras = tieneHorasExtras,
+                    repEmbHorasExtras = tieneHorasExtras ? (decimal?)horasExtras : null
                 };
                 var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/repembobinado")
                 { Content = JsonContent.Create(body) };
@@ -354,7 +358,8 @@ namespace SICRY_APP.Services
             catch { return 0; }
         }
 
-        public async Task<int> CrearReporteMantenimientoAsync(int idAsignacion, int idMotor, bool esConclusivo, string descripcion)
+        public async Task<int> CrearReporteMantenimientoAsync(int idAsignacion, int idMotor, bool esConclusivo, string descripcion,
+    bool tieneHorasExtras, int horasExtras)
         {
             try
             {
@@ -366,8 +371,8 @@ namespace SICRY_APP.Services
                     repManFechaReporte = DateTime.UtcNow,
                     repManEsConclusivo = esConclusivo,
                     repManDescripcion = descripcion,
-                    repManTieneHorasExtras = false,
-                    repManHorasExtras = 0
+                    repManTieneHorasExtras = tieneHorasExtras,
+                    repManHorasExtras = tieneHorasExtras ? (decimal?)horasExtras : null
                 };
                 var req = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/repmantenimiento")
                 { Content = JsonContent.Create(body) };

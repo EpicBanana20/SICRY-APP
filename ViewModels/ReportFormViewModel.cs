@@ -38,6 +38,9 @@ namespace SICRY_APP.ViewModels
         [ObservableProperty] private Motor motorSeleccionado;
         [ObservableProperty] private bool mostrarMotor; // true si es embobinado o mantenimiento
 
+        [ObservableProperty] private bool tieneHorasExtras;
+        [ObservableProperty] private int horasExtras = 1;
+
         public ReportFormViewModel()
         {
             CategoriasFallos = new();
@@ -72,6 +75,11 @@ namespace SICRY_APP.ViewModels
                 _ => "Editar Reporte"
             };
             MostrarMotor = false; // motor no editable aquí
+        }
+
+        partial void OnTieneHorasExtrasChanged(bool value)
+        {
+            if (!value) HorasExtras = 1;
         }
 
         private async Task InicializarAsync()
@@ -183,6 +191,18 @@ namespace SICRY_APP.ViewModels
         }
 
         [RelayCommand]
+        private void IncrementarHoras()
+        {
+            HorasExtras++;
+        }
+
+        [RelayCommand]
+        private void DecrementarHoras()
+        {
+            if (HorasExtras > 1) HorasExtras--;
+        }
+
+        [RelayCommand]
         private async Task GuardarReporteAsync()
         {
             if (string.IsNullOrWhiteSpace(Descripcion))
@@ -228,18 +248,21 @@ namespace SICRY_APP.ViewModels
                 {
                     case "electricista":
                         int idPozo = AsignacionSeleccionada.IdPozo ?? 0;
-                        System.Diagnostics.Debug.WriteLine($"===== POST electricista: idAsig={AsignacionSeleccionada.IdAsignacion}, idPozo={idPozo}, conclusivo={EsConclusivo} =====");
+                        System.Diagnostics.Debug.WriteLine($"===== POST electricista: idAsig={AsignacionSeleccionada.IdAsignacion}, idPozo={idPozo}, conclusivo={EsConclusivo}, HE={TieneHorasExtras}/{HorasExtras} =====");
                         idReporte = await ApiService.Instance.CrearReporteElectricistaAsync(
-                            AsignacionSeleccionada.IdAsignacion, idPozo, EsConclusivo, Descripcion);
+                            AsignacionSeleccionada.IdAsignacion, idPozo, EsConclusivo, Descripcion,
+                            TieneHorasExtras, HorasExtras);
                         System.Diagnostics.Debug.WriteLine($"===== RESPUESTA idReporte={idReporte} =====");
                         break;
                     case "embobinado":
                         idReporte = await ApiService.Instance.CrearReporteEmbobinadoAsync(
-                            AsignacionSeleccionada.IdAsignacion, MotorSeleccionado.IdMotor, EsConclusivo, Descripcion);
+                            AsignacionSeleccionada.IdAsignacion, MotorSeleccionado.IdMotor, EsConclusivo, Descripcion,
+                            TieneHorasExtras, HorasExtras);
                         break;
                     case "mantenimiento":
                         idReporte = await ApiService.Instance.CrearReporteMantenimientoAsync(
-                            AsignacionSeleccionada.IdAsignacion, MotorSeleccionado.IdMotor, EsConclusivo, Descripcion);
+                            AsignacionSeleccionada.IdAsignacion, MotorSeleccionado.IdMotor, EsConclusivo, Descripcion,
+                            TieneHorasExtras, HorasExtras);
                         break;
                 }
 
