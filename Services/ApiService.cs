@@ -493,6 +493,26 @@ namespace SICRY_APP.Services
 
         // ============ ACTUALIZAR ESTADO DE ASIGNACIÓN ============
 
+        public async Task<decimal> GetHorasExtraSemanaAsync()
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                int idUsuario = await GetIdUsuarioAsync();
+                if (string.IsNullOrEmpty(token) || idUsuario == 0) return 0;
+
+                var req = new HttpRequestMessage(HttpMethod.Get,
+                    $"{_baseUrl}/dashboard/horas-extra-semana?idUsuario={idUsuario}");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return 0;
+
+                var json = await resp.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                return json.TryGetProperty("horasExtra", out var v) ? v.GetDecimal() : 0;
+            }
+            catch { return 0; }
+        }
+
         public async Task<bool> CambiarEstadoAsignacionAsync(int idAsignacion, string nuevoEstado)
         {
             try
