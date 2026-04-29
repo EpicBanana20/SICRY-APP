@@ -430,9 +430,9 @@ namespace SICRY_APP.ViewModels
                     }
                 }
 
-                // 5. Cerrar asignación si es conclusivo
-                if (EsConclusivo)
-                    await ApiService.Instance.CambiarEstadoAsignacionAsync(AsignacionSeleccionada.IdAsignacion, "Completada");
+                // 5. Actualizar estado de asignación según conclusividad
+                string estadoAsignacion = EsConclusivo ? "Completada" : "Inconclusa";
+                await ApiService.Instance.CambiarEstadoAsignacionAsync(AsignacionSeleccionada.IdAsignacion, estadoAsignacion);
 
                 // 6. Alertas finales
                 if (huboErroresFotos)
