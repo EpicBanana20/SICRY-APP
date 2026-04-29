@@ -6,6 +6,7 @@
              Title="{Binding TituloPantalla}"
              BackgroundColor="White">
 
+    <Grid>
     <ScrollView>
         <VerticalStackLayout Spacing="15" Padding="20">
 
@@ -94,6 +95,11 @@
                         <DataTemplate>
                             <Grid Padding="5" WidthRequest="90" HeightRequest="90">
                                 <Frame CornerRadius="10" Padding="0" IsClippedToBounds="True" BorderColor="#CCC" HasShadow="False">
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ReportFormViewModel}}, Path=ExpandirImagenCommand}"
+                                            CommandParameter="{Binding EvUrlArchivo}"/>
+                                    </Frame.GestureRecognizers>
                                     <Image Source="{Binding EvUrlArchivo}" Aspect="AspectFill"/>
                                 </Frame>
                                 <Button Text="✕" BackgroundColor="#C62828" TextColor="White" FontSize="10" WidthRequest="24" HeightRequest="24" CornerRadius="12" Padding="0" HorizontalOptions="End" VerticalOptions="Start"
@@ -112,6 +118,11 @@
                         <DataTemplate>
                             <Grid Padding="5" WidthRequest="90" HeightRequest="90">
                                 <Frame CornerRadius="10" Padding="0" IsClippedToBounds="True" BorderColor="#CCC" HasShadow="False">
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ReportFormViewModel}}, Path=ExpandirImagenCommand}"
+                                            CommandParameter="{Binding FullPath}"/>
+                                    </Frame.GestureRecognizers>
                                     <Image Source="{Binding FullPath}" Aspect="AspectFill"/>
                                 </Frame>
                                 <Button Text="✕" BackgroundColor="#C62828" TextColor="White" FontSize="10" WidthRequest="24" HeightRequest="24" CornerRadius="12" Padding="0" HorizontalOptions="End" VerticalOptions="Start"
@@ -185,6 +196,11 @@
                     <DataTemplate>
                         <Grid Padding="5" WidthRequest="90" HeightRequest="90">
                             <Frame CornerRadius="10" Padding="0" IsClippedToBounds="True" BorderColor="#CCC" HasShadow="False">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ReportFormViewModel}}, Path=ExpandirImagenCommand}"
+                                        CommandParameter="{Binding FullPath}"/>
+                                </Frame.GestureRecognizers>
                                 <Image Source="{Binding FullPath}" Aspect="AspectFill"/>
                             </Frame>
                             <Button Text="✕" BackgroundColor="#C62828" TextColor="White" FontSize="10" WidthRequest="24" HeightRequest="24" CornerRadius="12" Padding="0" HorizontalOptions="End" VerticalOptions="Start"
@@ -236,4 +252,19 @@
 
         </VerticalStackLayout>
     </ScrollView>
+
+    <!-- Overlay imagen expandida -->
+    <Grid IsVisible="{Binding MostrarImagenExpandida}" BackgroundColor="#DD000000" ZIndex="10">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding CerrarImagenCommand}"/>
+        </Grid.GestureRecognizers>
+        <Image Source="{Binding ImagenExpandida}" Aspect="AspectFit" Margin="15" VerticalOptions="Center"/>
+        <Button Text="✕  Cerrar"
+                BackgroundColor="#C62828" TextColor="White"
+                CornerRadius="20" Padding="24,10"
+                HorizontalOptions="Center" VerticalOptions="End" Margin="0,0,0,40"
+                Command="{Binding CerrarImagenCommand}"/>
+    </Grid>
+
+    </Grid>
 </ContentPage>

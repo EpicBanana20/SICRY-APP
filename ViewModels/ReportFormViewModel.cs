@@ -48,6 +48,10 @@ namespace SICRY_APP.ViewModels
         [ObservableProperty] private ObservableCollection<RefaccionDeReporte> refaccionesExistentes = new();
         [ObservableProperty] private ObservableCollection<EvidenciaDeReporte> evidenciasExistentes = new();
 
+        // Overlay de imagen expandida
+        [ObservableProperty] private string imagenExpandida;
+        [ObservableProperty] private bool mostrarImagenExpandida;
+
         public ReportFormViewModel()
         {
             CategoriasFallos = new();
@@ -443,6 +447,21 @@ namespace SICRY_APP.ViewModels
                 await Shell.Current.GoToAsync("..");
             }
             finally { IsBusy = false; }
+        }
+
+        [RelayCommand]
+        private void ExpandirImagen(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return;
+            ImagenExpandida = url;
+            MostrarImagenExpandida = true;
+        }
+
+        [RelayCommand]
+        private void CerrarImagen()
+        {
+            MostrarImagenExpandida = false;
+            ImagenExpandida = null;
         }
 
         [RelayCommand]
