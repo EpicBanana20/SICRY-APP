@@ -32,6 +32,12 @@ namespace SICRY_APP.Models
 
         [JsonPropertyName("repDescripcion")]
         public string RepDescripcion { get; set; } = string.Empty;
+
+        [JsonPropertyName("repTieneHorasExtras")]
+        public bool? RepTieneHorasExtras { get; set; }
+
+        [JsonPropertyName("repHorasExtras")]
+        public decimal? RepHorasExtras { get; set; }
     }
 
     public class ReporteEmbobinado
@@ -53,6 +59,12 @@ namespace SICRY_APP.Models
 
         [JsonPropertyName("repEmbDescripcion")]
         public string RepEmbDescripcion { get; set; } = string.Empty;
+
+        [JsonPropertyName("repEmbTieneHorasExtras")]
+        public bool? RepEmbTieneHorasExtras { get; set; }
+
+        [JsonPropertyName("repEmbHorasExtras")]
+        public decimal? RepEmbHorasExtras { get; set; }
     }
 
     public class ReporteMantenimiento
@@ -74,6 +86,12 @@ namespace SICRY_APP.Models
 
         [JsonPropertyName("repManDescripcion")]
         public string RepManDescripcion { get; set; } = string.Empty;
+
+        [JsonPropertyName("repManTieneHorasExtras")]
+        public bool? RepManTieneHorasExtras { get; set; }
+
+        [JsonPropertyName("repManHorasExtras")]
+        public decimal? RepManHorasExtras { get; set; }
     }
 
     // DTO unificado para el listado y edición en la app
@@ -88,6 +106,8 @@ namespace SICRY_APP.Models
         public bool EsConclusivo { get; set; }
         public string Descripcion { get; set; } = string.Empty;
         public string Ubicacion { get; set; } = string.Empty;
+        public bool TieneHorasExtras { get; set; }
+        public int HorasExtras { get; set; }
 
         public string Titulo => Tipo switch
         {
@@ -102,5 +122,46 @@ namespace SICRY_APP.Models
 
         public string ColorEstadoFondo => EsConclusivo ? "#E8F5E9" : "#FFF3E0";
         public string ColorEstadoTexto => EsConclusivo ? "#2E7D32" : "#E65100";
+    }
+
+    public class FalloDeReporte
+    {
+        [JsonPropertyName("idFalloReportado")]
+        public int IdFalloReportado { get; set; }
+
+        [JsonPropertyName("idCategoriaFalloFk")]
+        public int IdCategoriaFalloFk { get; set; }
+
+        [JsonPropertyName("nombreCategoriaFallo")]
+        public string NombreCategoriaFallo { get; set; } = string.Empty;
+    }
+
+    public class RefaccionDeReporte
+    {
+        [JsonPropertyName("idRefaccionesUsadas")]
+        public int IdRefaccionesUsadas { get; set; }
+
+        [JsonPropertyName("nombreRefaccion")]
+        public string NombreRefaccion { get; set; } = string.Empty;
+
+        [JsonPropertyName("codigoPieza")]
+        public string? CodigoPieza { get; set; }
+
+        [JsonPropertyName("cantidad")]
+        public int Cantidad { get; set; }
+
+        public string DisplayText => $"{NombreRefaccion} x{Cantidad}";
+    }
+
+    public class EvidenciaDeReporte
+    {
+        [JsonPropertyName("idEvidencias")]
+        public int IdEvidencias { get; set; }
+
+        [JsonPropertyName("evUrlArchivo")]
+        public string EvUrlArchivo { get; set; } = string.Empty;
+
+        [JsonPropertyName("evTipoEvidencia")]
+        public string EvTipoEvidencia { get; set; } = string.Empty;
     }
 }

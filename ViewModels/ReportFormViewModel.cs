@@ -10,6 +10,8 @@ namespace SICRY_APP.ViewModels
     [QueryProperty(nameof(ReporteExistente), "Reporte")]
     public partial class ReportFormViewModel : ObservableObject
     {
+        private bool _esConclusivoPrevio;
+
         [ObservableProperty] private Asignacion asignacionSeleccionada;
         [ObservableProperty] private ReporteItem reporteExistente;
         [ObservableProperty] private string tipoReporte; // electricista | embobinado | mantenimiento
@@ -41,6 +43,11 @@ namespace SICRY_APP.ViewModels
         [ObservableProperty] private bool tieneHorasExtras;
         [ObservableProperty] private int horasExtras = 1;
 
+        // Datos existentes (modo edición)
+        [ObservableProperty] private ObservableCollection<FalloDeReporte> fallosExistentes = new();
+        [ObservableProperty] private ObservableCollection<RefaccionDeReporte> refaccionesExistentes = new();
+        [ObservableProperty] private ObservableCollection<EvidenciaDeReporte> evidenciasExistentes = new();
+
         public ReportFormViewModel()
         {
             CategoriasFallos = new();
@@ -66,7 +73,10 @@ namespace SICRY_APP.ViewModels
             TipoReporte = value.Tipo;
             Descripcion = value.Descripcion;
             EsConclusivo = value.EsConclusivo;
+            _esConclusivoPrevio = value.EsConclusivo;
             UbicacionTexto = value.Ubicacion;
+            TieneHorasExtras = value.TieneHorasExtras;
+            HorasExtras = value.HorasExtras > 0 ? value.HorasExtras : 1;
             TituloPantalla = value.Tipo switch
             {
                 "electricista" => "Editar Reporte Eléctrico",
@@ -75,6 +85,31 @@ namespace SICRY_APP.ViewModels
                 _ => "Editar Reporte"
             };
             MostrarMotor = false; // motor no editable aquí
+            _ = CargarDetallesReporteAsync(value);
+        }
+
+        private async Task CargarDetallesReporteAsync(ReporteItem reporte)
+        {
+            var fallos = await ApiService.Instance.GetFallosDeReporteAsync(reporte.Tipo, reporte.Id);
+            FallosExistentes.Clear();
+            foreach (var f in fallos) FallosExistentes.Add(f);
+
+            var refacciones = await ApiService.Instance.GetRefaccionesDeReporteAsync(reporte.Tipo, reporte.Id);
+            RefaccionesExistentes.Clear();
+            foreach (var r in refacciones) RefaccionesExistentes.Add(r);
+
+            var evidencias = await ApiService.Instance.GetEvidenciasDeReporteAsync(reporte.Tipo, reporte.Id);
+            EvidenciasExistentes.Clear();
+            foreach (var e in evidencias) EvidenciasExistentes.Add(e);
+
+            // Cargar catálogos para los pickers de edición
+            if (CategoriasFallos.Count == 0)
+                foreach (var c in await ApiService.Instance.GetCategoriasFallosAsync())
+                    CategoriasFallos.Add(c);
+
+            if (Refacciones.Count == 0)
+                foreach (var r in await ApiService.Instance.GetRefaccionesAsync())
+                    Refacciones.Add(r);
         }
 
         partial void OnTieneHorasExtrasChanged(bool value)
@@ -191,6 +226,75 @@ namespace SICRY_APP.ViewModels
         }
 
         [RelayCommand]
+        private async Task EliminarFalloExistenteAsync(FalloDeReporte fallo)
+        {
+            if (fallo == null) return;
+            var ok = await ApiService.Instance.EliminarFalloReportadoAsync(fallo.IdFalloReportado);
+            if (ok)
+                FallosExistentes.Remove(fallo);
+            else
+                await Application.Current.MainPage.DisplayAlert("Error", "No se pudo eliminar el fallo.", "OK");
+        }
+
+        [RelayCommand]
+        private async Task AgregarFalloEnEdicionAsync()
+        {
+            if (FalloParaAgregar == null || ReporteExistente == null) return;
+            var ok = await ApiService.Instance.AgregarFalloReportadoAsync(
+                FalloParaAgregar.IdCategoriaFallo, ReporteExistente.Tipo, ReporteExistente.Id);
+            if (ok)
+            {
+                // Refrescar la lista para obtener el ID real del nuevo fallo
+                var actualizados = await ApiService.Instance.GetFallosDeReporteAsync(ReporteExistente.Tipo, ReporteExistente.Id);
+                FallosExistentes.Clear();
+                foreach (var f in actualizados) FallosExistentes.Add(f);
+                FalloParaAgregar = null;
+            }
+            else
+                await Application.Current.MainPage.DisplayAlert("Error", "No se pudo agregar el fallo.", "OK");
+        }
+
+        [RelayCommand]
+        private async Task EliminarRefaccionExistenteAsync(RefaccionDeReporte refaccion)
+        {
+            if (refaccion == null) return;
+            var ok = await ApiService.Instance.EliminarRefaccionUsadaAsync(refaccion.IdRefaccionesUsadas);
+            if (ok)
+                RefaccionesExistentes.Remove(refaccion);
+            else
+                await Application.Current.MainPage.DisplayAlert("Error", "No se pudo eliminar la refacción.", "OK");
+        }
+
+        [RelayCommand]
+        private async Task AgregarRefaccionEnEdicionAsync()
+        {
+            if (RefaccionParaAgregar == null || ReporteExistente == null || CantidadRefaccion <= 0) return;
+            var ok = await ApiService.Instance.AgregarRefaccionUsadaAsync(
+                RefaccionParaAgregar.IdRefaccion, CantidadRefaccion, ReporteExistente.Tipo, ReporteExistente.Id);
+            if (ok)
+            {
+                var actualizadas = await ApiService.Instance.GetRefaccionesDeReporteAsync(ReporteExistente.Tipo, ReporteExistente.Id);
+                RefaccionesExistentes.Clear();
+                foreach (var r in actualizadas) RefaccionesExistentes.Add(r);
+                RefaccionParaAgregar = null;
+                CantidadRefaccion = 1;
+            }
+            else
+                await Application.Current.MainPage.DisplayAlert("Error", "No se pudo agregar la refacción.", "OK");
+        }
+
+        [RelayCommand]
+        private async Task EliminarEvidenciaExistenteAsync(EvidenciaDeReporte evidencia)
+        {
+            if (evidencia == null) return;
+            var ok = await ApiService.Instance.EliminarEvidenciaAsync(evidencia.IdEvidencias);
+            if (ok)
+                EvidenciasExistentes.Remove(evidencia);
+            else
+                await Application.Current.MainPage.DisplayAlert("Error", "No se pudo eliminar la evidencia.", "OK");
+        }
+
+        [RelayCommand]
         private void IncrementarHoras()
         {
             HorasExtras++;
@@ -219,13 +323,37 @@ namespace SICRY_APP.ViewModels
                     IsBusy = true;
                     ReporteExistente.Descripcion = Descripcion;
                     ReporteExistente.EsConclusivo = EsConclusivo;
+                    ReporteExistente.TieneHorasExtras = TieneHorasExtras;
+                    ReporteExistente.HorasExtras = HorasExtras;
                     var ok = await ApiService.Instance.ActualizarReporteAsync(ReporteExistente);
                     if (!ok)
                     {
                         await Application.Current.MainPage.DisplayAlert("Error", "No se pudo actualizar el reporte.", "OK");
                         return;
                     }
-                    await Application.Current.MainPage.DisplayAlert("Éxito", "Reporte actualizado.", "OK");
+
+                    // Subir fotos nuevas agregadas en edición
+                    bool huboErroresFotos = false;
+                    foreach (var foto in FotosSeleccionadas)
+                    {
+                        using var stream = await foto.OpenReadAsync();
+                        var ext = System.IO.Path.GetExtension(foto.FileName);
+                        if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
+                        var url = await ApiService.Instance.SubirEvidenciaAsync(
+                            stream, ext, ReporteExistente.IdAsignacion, ReporteExistente.Tipo, ReporteExistente.Id);
+                        if (url == null) huboErroresFotos = true;
+                    }
+
+                    // Actualizar estado de la asignación si EsConclusivo cambió
+                    if (EsConclusivo && !_esConclusivoPrevio)
+                        await ApiService.Instance.CambiarEstadoAsignacionAsync(ReporteExistente.IdAsignacion, "Completada");
+                    else if (!EsConclusivo && _esConclusivoPrevio)
+                        await ApiService.Instance.CambiarEstadoAsignacionAsync(ReporteExistente.IdAsignacion, "Inconclusa");
+
+                    string msg = huboErroresFotos
+                        ? "Reporte actualizado, pero algunas fotos no pudieron subirse."
+                        : "Reporte actualizado correctamente.";
+                    await Application.Current.MainPage.DisplayAlert("Éxito", msg, "OK");
                     await Shell.Current.GoToAsync("..");
                 }
                 finally { IsBusy = false; }

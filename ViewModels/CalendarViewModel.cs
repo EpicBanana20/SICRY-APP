@@ -58,6 +58,10 @@ namespace SICRY_APP.ViewModels
             var ok = await ApiService.Instance.EliminarReporteAsync(reporteSeleccionado.Tipo, reporteSeleccionado.Id);
             if (ok)
             {
+                // Si el reporte era conclusivo, la asignación estaba Completada — revertirla
+                if (reporteSeleccionado.EsConclusivo)
+                    await ApiService.Instance.CambiarEstadoAsignacionAsync(reporteSeleccionado.IdAsignacion, "Inconclusa");
+
                 Reportes.Remove(reporteSeleccionado);
                 HasReportes = Reportes.Count > 0;
             }

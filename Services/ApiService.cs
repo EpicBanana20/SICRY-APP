@@ -326,7 +326,7 @@ namespace SICRY_APP.Services
                 System.Diagnostics.Debug.WriteLine($"===== RepElectricista status={resp.StatusCode} body={contenido} =====");
                 if (!resp.IsSuccessStatusCode) return 0;
                 var result = await resp.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
-                return result.TryGetProperty("id", out var idProp) ? idProp.GetInt32() : 0;
+                return result.TryGetProperty("idReporteCampo", out var idProp) ? idProp.GetInt32() : 0;
             }
             catch { return 0; }
         }
@@ -567,7 +567,9 @@ namespace SICRY_APP.Services
                             Fecha = r.RepFechaReporte,
                             EsConclusivo = r.RepEsConclusivo,
                             Descripcion = r.RepDescripcion,
-                            Ubicacion = pozo?.UbicacionPozo ?? "Sin pozo"
+                            Ubicacion = pozo?.UbicacionPozo ?? "Sin pozo",
+                            TieneHorasExtras = r.RepTieneHorasExtras ?? false,
+                            HorasExtras = (int)(r.RepHorasExtras ?? 0)
                         });
                     }
                 }
@@ -590,7 +592,9 @@ namespace SICRY_APP.Services
                             Fecha = r.RepEmbFechaReporte,
                             EsConclusivo = r.RepEmbEsConclusivo,
                             Descripcion = r.RepEmbDescripcion,
-                            Ubicacion = $"Motor #{r.IdMotor}"
+                            Ubicacion = $"Motor #{r.IdMotor}",
+                            TieneHorasExtras = r.RepEmbTieneHorasExtras ?? false,
+                            HorasExtras = (int)(r.RepEmbHorasExtras ?? 0)
                         });
                     }
                 }
@@ -613,7 +617,9 @@ namespace SICRY_APP.Services
                             Fecha = r.RepManFechaReporte,
                             EsConclusivo = r.RepManEsConclusivo,
                             Descripcion = r.RepManDescripcion,
-                            Ubicacion = $"Motor #{r.IdMotor}"
+                            Ubicacion = $"Motor #{r.IdMotor}",
+                            TieneHorasExtras = r.RepManTieneHorasExtras ?? false,
+                            HorasExtras = (int)(r.RepManHorasExtras ?? 0)
                         });
                     }
                 }
@@ -649,7 +655,9 @@ namespace SICRY_APP.Services
                             idPozo = item.IdPozo,
                             repFechaReporte = item.Fecha,
                             repEsConclusivo = item.EsConclusivo,
-                            repDescripcion = item.Descripcion
+                            repDescripcion = item.Descripcion,
+                            repTieneHorasExtras = item.TieneHorasExtras,
+                            repHorasExtras = item.TieneHorasExtras ? item.HorasExtras : 0
                         };
                         break;
                     case "embobinado":
@@ -662,8 +670,8 @@ namespace SICRY_APP.Services
                             repEmbFechaReporte = item.Fecha,
                             repEmbEsConclusivo = item.EsConclusivo,
                             repEmbDescripcion = item.Descripcion,
-                            repEmbTieneHorasExtras = false,
-                            repEmbHorasExtras = 0
+                            repEmbTieneHorasExtras = item.TieneHorasExtras,
+                            repEmbHorasExtras = item.TieneHorasExtras ? item.HorasExtras : 0
                         };
                         break;
                     case "mantenimiento":
@@ -676,8 +684,8 @@ namespace SICRY_APP.Services
                             repManFechaReporte = item.Fecha,
                             repManEsConclusivo = item.EsConclusivo,
                             repManDescripcion = item.Descripcion,
-                            repManTieneHorasExtras = false,
-                            repManHorasExtras = 0
+                            repManTieneHorasExtras = item.TieneHorasExtras,
+                            repManHorasExtras = item.TieneHorasExtras ? item.HorasExtras : 0
                         };
                         break;
                     default: return false;
@@ -694,6 +702,143 @@ namespace SICRY_APP.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error ActualizarReporte: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ============ DETALLE DE REPORTE (fallos, refacciones, evidencias) ============
+
+        public async Task<List<FalloDeReporte>> GetFallosDeReporteAsync(string tipo, int id)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return new();
+                string param = tipo switch
+                {
+                    "electricista" => $"reporteCampoId={id}",
+                    "embobinado" => $"reporteEmbobinadoId={id}",
+                    "mantenimiento" => $"reporteMantenimientoId={id}",
+                    _ => null
+                };
+                if (param == null) return new();
+                var req = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/fallosreportados?{param}");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return new();
+                return await resp.Content.ReadFromJsonAsync<List<FalloDeReporte>>() ?? new();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error GetFallos: {ex.Message}");
+                return new();
+            }
+        }
+
+        public async Task<List<RefaccionDeReporte>> GetRefaccionesDeReporteAsync(string tipo, int id)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return new();
+                string param = tipo switch
+                {
+                    "electricista" => $"reporteCampoId={id}",
+                    "embobinado" => $"reporteEmbobinadoId={id}",
+                    "mantenimiento" => $"reporteMantenimientoId={id}",
+                    _ => null
+                };
+                if (param == null) return new();
+                var req = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/refaccionesusadas?{param}");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return new();
+                return await resp.Content.ReadFromJsonAsync<List<RefaccionDeReporte>>() ?? new();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error GetRefacciones: {ex.Message}");
+                return new();
+            }
+        }
+
+        public async Task<List<EvidenciaDeReporte>> GetEvidenciasDeReporteAsync(string tipo, int id)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return new();
+                string param = tipo switch
+                {
+                    "electricista" => $"reporteCampoId={id}",
+                    "embobinado" => $"reporteEmbobinadoId={id}",
+                    "mantenimiento" => $"reporteMantenimientoId={id}",
+                    _ => null
+                };
+                if (param == null) return new();
+                var req = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/evidencias?{param}");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return new();
+                return await resp.Content.ReadFromJsonAsync<List<EvidenciaDeReporte>>() ?? new();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error GetEvidencias: {ex.Message}");
+                return new();
+            }
+        }
+
+        public async Task<bool> EliminarRefaccionUsadaAsync(int id)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return false;
+                var req = new HttpRequestMessage(HttpMethod.Delete, $"{_baseUrl}/refaccionesusadas/{id}");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error EliminarRefaccion: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> EliminarFalloReportadoAsync(int id)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return false;
+                var req = new HttpRequestMessage(HttpMethod.Delete, $"{_baseUrl}/fallosreportados/{id}");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error EliminarFallo: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> EliminarEvidenciaAsync(int id)
+        {
+            try
+            {
+                var token = await GetTokenAsync();
+                if (string.IsNullOrEmpty(token)) return false;
+                var req = new HttpRequestMessage(HttpMethod.Delete, $"{_baseUrl}/evidencias/{id}");
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var resp = await _httpClient.SendAsync(req);
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error EliminarEvidencia: {ex.Message}");
                 return false;
             }
         }
